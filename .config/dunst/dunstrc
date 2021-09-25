@@ -1,4 +1,4 @@
-
+%output-file%=/home/david/.config/dunst/dunstrc
 
 # ██████╗ ██╗   ██╗███╗   ██╗███████╗████████╗
 # ██╔══██╗██║   ██║████╗  ██║██╔════╝╚══██╔══╝
@@ -58,7 +58,7 @@ padding = 12
 horizontal_padding = 20
 frame_width = 0
 
-frame_color = "#a7c080"
+frame_color = "%green%"
 separator_color = frame
 
 sort = yes
@@ -121,23 +121,23 @@ mouse_right_click = close_current
 #----------------------
 
 [urgency_low]
-background = "#2b3339"
-foreground = "#d3c6aa"
-highlight = "#83c092"
+background = "%background%"
+foreground = "%foreground%"
+highlight = "%cyan%"
 timeout = 5
 icon = /usr/share/icons/Papirus/48x48/emblems/emblem-information.svg
 
 [urgency_normal]
-background = "#2b3339"
-foreground = "#d3c6aa"
-highlight = "#83c092"
+background = "%background%"
+foreground = "%foreground%"
+highlight = "%cyan%"
 timeout = 5
 icon = /usr/share/icons/Papirus/48x48/emblems/emblem-information.svg
 
 [urgency_critical]
-background = "#2b3339"
-foreground = "#d3c6aa"
-highlight = "#e67e80"
+background = "%background%"
+foreground = "%foreground%"
+highlight = "%red%"
 timeout = 5
 icon = /usr/share/icons/Papirus/48x48/emblems/emblem-important.svg
 

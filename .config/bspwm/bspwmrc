@@ -8,7 +8,7 @@
 # ╚═════╝ ╚══════╝╚═╝      ╚══╝╚══╝ ╚═╝     ╚═╝
 
 # •• Wallpaper
-~/.config/gtheme/post-scripts/wallpaper.sh
+~/.config/gtheme/post-scripts/wallpaper.sh "no-dm"
 
 # •• Polybar
 /home/david/.config/polybar/custom/launch.sh
