@@ -11,7 +11,7 @@
 ~/.config/gtheme/post-scripts/wallpaper.sh "no-dm"
 
 # •• Polybar
-/home/david/.config/polybar/custom/launch.sh
+/home/david/.config/polybar/launch.sh
 
 pgrep -x sxhkd > /dev/null || sxhkd &
 

@@ -19,7 +19,7 @@ super + shift + Return
  
 # Launcher
 super + @space
-    /home/david/.config/rofi/launchers/launcher.sh
+    /home/david/.config/rofi/launcher/launcher.sh
  
 # Reload sxhkd
 super + Escape
@@ -30,7 +30,7 @@ super + Escape
 #----------------------
 
 ctrl + super + c
-    rofi -show calc -modi calc -no-show-match -no-sort -theme /home/david/.config/rofi/calculator/custom-theme.rasi
+    /home/david/.config/rofi/calculator/calculator.sh
 
 ctrl + super + f
     firejail firefox
