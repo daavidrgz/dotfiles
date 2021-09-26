@@ -1,6 +1,6 @@
 # Dotfiles 
 
-My current Arch Linux dotfiles, here to show you how beautiful your desktop can be.
+My current Arch Linux dotfiles, here to show you how beautiful your desktop can be 🕶.
 
 All of this can't be done without [Gtheme](https://github.com/daavidrgz/gtheme/).
 
