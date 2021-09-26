@@ -7,12 +7,12 @@
 
 
 configuration {
-	font:							"FiraCode Nerd Font Medium 14";
+    font:							"FiraCode Nerd Font Medium 14";
     show-icons:                     false;
-	icon-theme: 					"Papirus";
+    icon-theme: 					"Papirus";
     drun-display-format:            "{name}";
     disable-history:                false;
-	sidebar-mode: 					false;
+    sidebar-mode: 					false;
 }
 
 @import "~/.config/rofi/colors.rasi"
@@ -22,27 +22,27 @@ window {
     background-color:               @bg;
     text-color:                     @fg;
     border-radius:                  0px;
-	width:							100%;
-	height:							100%;
+    width:							100%;
+    height:							100%;
 }
 
 prompt {
     enabled: 						true;
     padding:                        1% 1% 1% 0%;
-	background-color: 				@blue;
-	text-color: 					@bg;
+    background-color: 				@blue;
+    text-color: 					@bg;
 }
 
 textbox-prompt-colon {
-	expand: 						false;
-	str: 							"System |";
-	background-color: 				@blue;
-	text-color: 					@bg;
+    expand: 						false;
+    str: 							"System |";
+    background-color: 				@blue;
+    text-color: 					@bg;
     padding:                        1% 0.5% 1% 0.5%;
 }
 
 inputbar {
-	children: 						[ textbox-prompt-colon, prompt ];
+    children: 						[ textbox-prompt-colon, prompt ];
     background-color:               @blue;
     text-color:                     @fg;
     expand:                         false;
@@ -80,7 +80,7 @@ element {
 element-text {
     background-color: 				#00000000;
     text-color:       				inherit;
-	font:							"feather 64";
+    font:							"feather 64";
     expand:                         true;
     horizontal-align:               0.5;
     vertical-align:                 0.5;
