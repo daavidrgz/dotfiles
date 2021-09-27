@@ -76,6 +76,7 @@ alias purge='sudo pacman -Rns $(pacman -Qdtq)'
 alias bcat='/bin/cat'
 alias pdf='zathura --fork'
 alias dup='kitty . &; disown'
+alias f='fuck'
 
 # Setting the correct key bindings
 bindkey  "^[[H"   beginning-of-line
@@ -88,3 +89,5 @@ bindkey '^[[B' history-substring-search-down
 
 # Temporal exports
 export PATH=$PATH:$HOME/.config/gtheme
+
+eval $(thefuck --alias)
