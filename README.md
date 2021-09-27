@@ -2,11 +2,15 @@
 
 My current Arch Linux dotfiles, here to show you how beautiful your desktop can be 🙆🏻‍♂️
 
-All of this can't be done without [Gtheme 🎨](https://github.com/daavidrgz/gtheme/).
+All of this can't be done without [Gtheme 🎨](https://github.com/daavidrgz/gtheme/)
 
 ![Gif](screenshots/gif.gif)
 
 ## Detailed screenshots 
+
+* Black-On-White
+
+![Black-On-White](screenshots/scr6.png)
 
 * Iceberg-Dark
 
