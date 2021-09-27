@@ -4,8 +4,9 @@ My current Arch Linux dotfiles, here to show you how beautiful your desktop can 
 
 All of this can't be done without [Gtheme 🎨](https://github.com/daavidrgz/gtheme/).
 
+![Gif](screenshots/gif.gif)
 
-## Screenshots 
+## Detailed screenshots 
 
 * Iceberg-Dark
 
