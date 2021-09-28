@@ -6,11 +6,17 @@ All of this can't be done without [Gtheme 🎨](https://github.com/daavidrgz/gth
 
 ![Gif](screenshots/gif.gif)
 
+
+## Some notes
+
+To get the rofi calculator work refer to the original repo [rofi-calc](https://github.com/svenstaro/rofi-calc)
+
+
 ## Detailed screenshots 
 
-* Black-On-White
+* BlackAndWhite-Light
 
-![Black-On-White](screenshots/scr6.png)
+![BlackAndWhite-Light](screenshots/scr6.png)
 
 * Iceberg-Dark
 

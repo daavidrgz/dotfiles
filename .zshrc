@@ -77,6 +77,7 @@ alias bcat='/bin/cat'
 alias pdf='zathura --fork'
 alias dup='kitty . &; disown'
 alias f='fuck'
+alias du='du -d 1 -ha'
 
 # Setting the correct key bindings
 bindkey  "^[[H"   beginning-of-line
