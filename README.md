@@ -9,7 +9,7 @@ All of this can't be done without [Gtheme 🎨](https://github.com/daavidrgz/gth
 
 ## Some notes
 
-To get the rofi calculator work refer to the original repo [rofi-calc](https://github.com/svenstaro/rofi-calc)
+To get the rofi calculator to work refer to the original repo [rofi-calc](https://github.com/svenstaro/rofi-calc)
 
 
 ## Detailed screenshots 
