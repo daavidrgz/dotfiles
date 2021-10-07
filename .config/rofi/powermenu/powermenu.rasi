@@ -46,7 +46,7 @@ inputbar {
     background-color:               @blue;
     text-color:                     @fg;
     expand:                         false;
-    border:                  		0% 0.2% 0.2% 0%;
+    border:                  		0;
     border-radius:                  1%;
     border-color:                  	@bg;
     margin:                         0% 59.3% 0% 0%;
@@ -67,7 +67,7 @@ mainbox {
     background-color:               @bg;
     children:                       [ inputbar, listview ];
     spacing:                        5%;
-    padding:                        32.50% 0% 0% 13.25%;
+    padding:                        32.50% 0% 0% 10%;
 }
 
 element {
