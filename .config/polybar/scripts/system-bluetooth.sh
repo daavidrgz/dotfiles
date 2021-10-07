@@ -46,9 +46,9 @@ bluetooth_toggle() {
 }
 
 case "$1" in
-    --toggle)
+    '--toggle')
         bluetooth_toggle;;
-	--connect)
+    '--connect')
 		bluetooth_connect;;
     *)
         bluetooth_print;;

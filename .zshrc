@@ -5,11 +5,14 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+# Completions
+autoload -Uz compinit && compinit
+
 # Language
 export LANG=en_GB.utf8
 
-# Ranger default editor
-export VISUAL=code
+# Default editor
+export VISUAL=nano
 
 # Config files
 export XDG_CONFIG_HOME=/home/david/.config
@@ -66,8 +69,8 @@ alias grep='grep --color=auto'
 alias ll='ls -alF --group-directories-first'
 alias tree='tree -C'
 alias cat='bat'
-alias lll='exa -l -ga --octal-permissions'
-alias feh='feh -Fd --draw-tinted --conversion-timeout 1'
+alias llle='exa -l -ga --octal-permissions'
+alias feh='feh -Fd --draw-tinted --conversion-timeout 5'
 alias vtop="vtop --theme brew"
 alias onesync='rclone sync -P OneDrive:Música/Canciones\ Hi-Res Music'
 alias xokas='firefox twitch.tv/elxokas &>/dev/null &; disown %1'
@@ -78,6 +81,16 @@ alias pdf='zathura --fork'
 alias dup='kitty . &; disown'
 alias f='fuck'
 alias du='du -d 1 -ha'
+alias lll='lsd -la --group-dirs first'
+alias unimatrix='unimatrix -s 96 -f -l o'
+
+# Git aliases
+alias ga='git add'
+alias gc='git commit -m'
+alias gp='git push'
+
+# Key press rate
+xset r rate 200 40
 
 # Setting the correct key bindings
 bindkey  "^[[H"   beginning-of-line
@@ -92,3 +105,11 @@ bindkey '^[[B' history-substring-search-down
 export PATH=$PATH:$HOME/.config/gtheme
 
 eval $(thefuck --alias)
+
+export LESS_TERMCAP_mb=$'\E[1;34m'     # begin bold
+export LESS_TERMCAP_md=$'\E[1;34m'     # begin blink
+export LESS_TERMCAP_me=$'\E[0m'        # reset bold/blink
+export LESS_TERMCAP_so=$'\E[01;35m'    # begin reverse video
+export LESS_TERMCAP_se=$'\E[0m'        # reset reverse video
+export LESS_TERMCAP_us=$'\E[1;32m'     # begin underline
+export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
