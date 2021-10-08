@@ -30,6 +30,9 @@ export PATH=$PATH:$JAVA_HOME/bin
 # Custom Scripts
 export PATH=$PATH:/home/david/Scripts
 
+# Temporal exports
+export PATH=$PATH:/home/david/Documents/GitHub/gtheme
+
 # Fix the Java problem
 export _JAVA_AWT_WM_NONREPARENTING=1
 
@@ -86,7 +89,7 @@ alias unimatrix='unimatrix -s 96 -f -l o'
 
 # Git aliases
 alias ga='git add'
-alias gc='git commit -m'
+alias gc='git commit'
 alias gp='git push'
 
 # Key press rate
@@ -99,10 +102,6 @@ bindkey  "^[[3~"  delete-char
 
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
-
-
-# Temporal exports
-export PATH=$PATH:$HOME/.config/gtheme
 
 eval $(thefuck --alias)
 

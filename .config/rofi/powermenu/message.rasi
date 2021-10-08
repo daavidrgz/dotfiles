@@ -3,15 +3,15 @@
 * {
   background-color:       @bg;
   text-color:             @fg;
-  font:				 						"FiraCode Nerd Font Medium 10";
+  font:				 						"FiraCode Nerd Font Medium 11";
 }
 
 window {
   width:      						360px;
   padding:    						25px;
-  border:									1px;
-  border-radius:          0px;
-  border-color:           @magenta;
+  border:									2px;
+  border-radius:          6px;
+  border-color:           @blue;
   location:               center;
   y-offset:               -2em;
 }
