@@ -1,0 +1,53 @@
+#  -------- Gtheme: Horizon --------
+
+window:
+  padding:
+    x: 10
+    y: 10
+  dyanmic_padding: true
+  
+font:
+  normal:
+    family: DejaVuSansMono Nerd Font
+  bold:
+    family: DejaVuSansMono Nerd Font 
+  italic:
+    family: DejaVuSansMono Nerd Font
+  size: 8
+  offset:
+    x: 0
+    y: 1
+  draw_bold_text_with_bright_colors: true
+
+cursor:
+  style:
+    shape: Beam
+
+colors:
+  cursor:
+    text: '0xBABABA'
+    cursor: '0xBABABA'
+  #selection:
+  #  text: '0x1C1E26'
+  #  background: '0x07DA8C'
+  primary:
+    background: '0x1C1E26'
+    foreground: '0xBABABA'
+  normal:
+    black: '0x676767'
+    red: '0xEC6A88'
+    green: '0x29D398'
+    yellow: '0xFAB795'
+    blue: '0xe95678'
+    magenta: '0xb877db'
+    cyan: '0x25b0bc'
+    white: '0xFEFFFF'
+  bright:
+    black: '0x676767'
+    red: '0xEC6A88'
+    green: '0x3FDAA4'
+    yellow: '0xFBC3A7'
+    blue: '0x3FC6DE'
+    magenta: '0xb877db'
+    cyan: '0x6BE6E6'
+    white: '0xFEFFFF'
