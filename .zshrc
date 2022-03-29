@@ -7,6 +7,7 @@ export LANG=en_GB.utf8
 
 # Default editor
 export VISUAL=nano
+export EDITOR=$VISUAL
 
 # Config files
 export XDG_CONFIG_HOME=/home/david/.config
@@ -36,15 +37,15 @@ export PATH=$PATH:$JAVA_HOME/bin
 export PATH=$PATH:/home/david/scripts
 
 # Temporal exports
-export PATH=$PATH:/home/david/github/gtheme
+export PATH=$PATH:/home/david/works/ri/lucene-9.0.0/bin
 
 # Fix the Java problem
 export _JAVA_AWT_WM_NONREPARENTING=1
 
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.zsh_history
-HISTSIZE=10000
-SAVEHIST=10000
+HISTSIZE=50000
+SAVEHIST=50000
 bindkey -e
 
 # Completions
@@ -87,6 +88,8 @@ alias lll='lsd -la --group-dirs first'
 alias unimatrix='unimatrix -s 96 -f -l o'
 alias r='ranger'
 alias ncm='ncmpcpp'
+alias c='code .'
+alias rg='rg --hidden --no-ignore'
 
 # Git aliases
 alias ga='git add'
@@ -94,12 +97,12 @@ alias gc='git commit'
 alias gp='git push'
 alias gst='git status'
 alias gpl='git pull'
-
+alias fgc='git add .;git commit -m "Fast committed";git push'
 
 # Cargo aliases
 alias cb='cargo build'
 alias cc='cargo check'
-alias cr='cargo run'
+alias cr='cargo run -q'
 alias ct='cargo test'
 
 # Dir autojump
