@@ -1,0 +1,6 @@
+#!/bin/bash
+
+#/home/david/Scripts/rainbowCursor enable
+LD_PRELOAD=/usr/lib/spotify-adblock.so spotify %U
+#/home/david/Scripts/rainbowCursor disable
+exit 0

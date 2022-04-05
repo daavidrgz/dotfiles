@@ -1,0 +1,28 @@
+#/bin/bash
+
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root!"
+   exit 1
+fi
+
+function setPowersave() {
+	cpupower frequency-set -g powersave
+	sleep 1
+	cpupower frequency-set --min 800000
+	sleep 1
+	cpupower frequency-set --max 2400000
+}
+
+function setPerformance() {
+	cpupower frequency-set -g performance
+	sleep 1
+	cpupower frequency-set --max 4100000
+	sleep 1
+	cpupower frequency-set --min 3900000
+}
+
+case "$1" in
+	eco) setPowersave;;
+	lambo) setPerformance;;
+	*) echo -e "Invalid option! Possible values: [eco, lambo]"; exit 1;;
+esac

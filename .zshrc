@@ -60,6 +60,14 @@ source /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+# Temporal aliases
+alias cdd='cd ~/github/gtheme-desktops'
+alias cdw='cd ~/github/gtheme-wallpapers'
+alias cdt='cd ~/github/gtheme-themes'
+alias cdg='cd ~/github/gtheme'
+alias cdc='cd ~/.config/gtheme'
+
+
 # Default aliases
 alias la='ls -A'
 alias l='ls -CF'
@@ -72,6 +80,7 @@ alias grep='grep --color=auto'
 alias ll='LC_COLLATE=C ls -alhF --group-directories-first'
 alias tree='tree -C'
 alias cat='bat'
+alias catp='bat -p'
 alias llle='exa -l -ga --octal-permissions'
 alias feh='feh -Fd --draw-tinted --conversion-timeout 5'
 alias vtop="vtop --theme brew"
@@ -84,7 +93,7 @@ alias pdf='zathura --fork'
 alias dup='kitty . &; disown'
 alias f='fuck'
 alias du='du -d 1 -ha'
-alias lll='lsd -la --group-dirs first'
+alias ell='exa -laF --icons --group-directories-first'
 alias unimatrix='unimatrix -s 96 -f -l o'
 alias r='ranger'
 alias ncm='ncmpcpp'
@@ -104,6 +113,10 @@ alias cb='cargo build'
 alias cc='cargo check'
 alias cr='cargo run -q'
 alias ct='cargo test'
+
+# Gtheme aliases
+alias gt='gtheme theme apply'
+alias gd='gtheme desktop apply'
 
 # Dir autojump
 [[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh

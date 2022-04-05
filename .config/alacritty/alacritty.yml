@@ -1,19 +1,19 @@
-#  -------- Gtheme: Horizon --------
+# Tokyo-Night 
 
 window:
   padding:
-    x: 10
-    y: 10
+    x: 28
+    y: 28
   dyanmic_padding: true
-  
+
 font:
   normal:
     family: DejaVuSansMono Nerd Font
   bold:
-    family: DejaVuSansMono Nerd Font 
+    family: DejaVuSansMono Nerd Font
   italic:
     family: DejaVuSansMono Nerd Font
-  size: 8
+  size: 12
   offset:
     x: 0
     y: 1
@@ -25,29 +25,31 @@ cursor:
 
 colors:
   cursor:
-    text: '0xBABABA'
-    cursor: '0xBABABA'
+    text: '0xc0caf5'
+    cursor: '0xc0caf5'
   #selection:
-  #  text: '0x1C1E26'
-  #  background: '0x07DA8C'
+  #  text: '0x1a1b26'
+  #  background: '0xc0caf5'
   primary:
-    background: '0x1C1E26'
-    foreground: '0xBABABA'
+    background: '0x1a1b26'
+    foreground: '0xc0caf5'
   normal:
-    black: '0x676767'
-    red: '0xEC6A88'
-    green: '0x29D398'
-    yellow: '0xFAB795'
-    blue: '0xe95678'
-    magenta: '0xb877db'
-    cyan: '0x25b0bc'
-    white: '0xFEFFFF'
+    black: '0x15161E'
+    red: '0xf7768e'
+    green: '0x9ece6a'
+    yellow: '0xe0af68'
+    blue: '0x7aa2f7'
+    magenta: '0xbb9af7'
+    cyan: '0x7dcfff'
+    white: '0xa9b1d6'
   bright:
-    black: '0x676767'
-    red: '0xEC6A88'
-    green: '0x3FDAA4'
-    yellow: '0xFBC3A7'
-    blue: '0x3FC6DE'
-    magenta: '0xb877db'
-    cyan: '0x6BE6E6'
-    white: '0xFEFFFF'
+    black: '0x414868'
+    red: '0xf7768e'
+    green: '0x9ece6a'
+    yellow: '0xe0af68'
+    blue: '0x7aa2f7'
+    magenta: '0xbb9af7'
+    cyan: '0x7dcfff'
+    white: '0xc0caf5'
+env:
+    WINIT_X11_SCALE_FACTOR: "1"

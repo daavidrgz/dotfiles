@@ -1,0 +1,14 @@
+#!/bin/bash
+
+CURSOR_PATH=/home/david/.local/share/icons/default/index.theme
+DEFAULT_CURSOR=$(cat /usr/share/gtk-3.0/settings.ini | grep gtk-cursor-theme-name | awk -F ' = ' '{print $2}')
+
+if [ "$1" == "enable" ]; then
+	sed -i "s/Inherits.*/Inherits=Bibata-Rainbow-Modern/" $CURSOR_PATH
+elif [ "$1" == "disable" ]; then
+	sed -i "s/Inherits.*/Inherits=$DEFAULT_CURSOR/" $CURSOR_PATH
+else
+	echo "[!] Unknown option\n"
+fi
+
+exit 0

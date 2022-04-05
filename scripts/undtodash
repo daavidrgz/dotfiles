@@ -1,0 +1,40 @@
+#!/bin/bash
+
+function print_usage() {
+	echo -e "\nUsage: undtodash [PATH or FILE]\n"
+	exit 1
+}
+
+function check_input() {
+	[[ -z $1 || ! -z $2 ]] && print_usage
+
+	if [ ! -e "$1" ]; then
+		echo -e "\nFile or directory does not exist!\n"
+		exit 1
+	fi
+}
+
+function rename() {
+	declare file=$(realpath "$1")
+	mv $file "$(dirname "$file")/$(echo $(basename "$file") | sed s/_/-/g)"
+}
+
+function main() {
+	check_input "$@"
+
+	if [ -d "$1" ]; then # It's a directory
+		for i in $1/*; do
+			rename "$i"
+		done
+	fi
+
+	if [ -f "$1" ]; then # It's a file
+		rename "$1"
+	fi
+
+	exit 0
+}
+
+main "$@"
+
+		

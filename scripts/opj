@@ -1,0 +1,107 @@
+#!/bin/bash
+
+#COLORS
+greenColor="\e[1;32m"
+redColor="\e[1;31m"
+yellowColor="\e[1;33m"
+blueColor="\e[1;34m"
+defaultColor="\e[0m"
+defaultColorBold="\e[1m"
+
+
+# GLOBAL VARIABLES
+DEFAULT_PATHS_FILE="/etc/opj/default_paths"
+
+function addPath() {
+	if [ ! -d "$1" ]; then
+		echo -e "\n${redColor}[*]${defaultColor} The folder ${defaultColorBold}$1${defaultColor} does not exist\n"
+		exit 1
+	fi
+
+	REAL_PATH=$(realpath $1)
+
+	if [ "$(cat $DEFAULT_PATHS_FILE 2>/dev/null | grep -x $REAL_PATH)" != "" ]; then
+		echo -e "\n${yellowColor}[*]${defaultColor} The folder ${defaultColorBold}$REAL_PATH${defaultColor} is already in the path\n"
+		exit 1;
+	fi
+
+	echo -e "\n${greenColor}[+]${defaultColor} Adding folder ${defaultColorBold}$REAL_PATH${defaultColor} to the path\n"
+	echo $REAL_PATH >> $DEFAULT_PATHS_FILE
+	exit 0
+}
+
+function removePath() {
+	REAL_PATH=$(realpath $1)
+
+	for line in $(cat $DEFAULT_PATHS_FILE 2>/dev/null); do
+		if [ $line == $REAL_PATH ]; then
+			echo -e "\n${greenColor}[-]${defaultColor} Removing folder ${defaultColorBold}$REAL_PATH${defaultColor} from the path\n"
+			/bin/cat $DEFAULT_PATHS_FILE 2>/dev/null | grep -vx "$REAL_PATH" > $DEFAULT_PATHS_FILE.temp
+			rm $DEFAULT_PATHS_FILE
+			mv $DEFAULT_PATHS_FILE.temp $DEFAULT_PATHS_FILE
+			exit 0;
+		fi
+	done
+
+	echo -e "\n${yellowColor}[*]${defaultColor} Directory ${defaultColorBold}$REAL_PATH${defaultColor} not found in the path\n"
+	exit 0;
+}
+
+function listProjects() {
+	for line in $(cat $DEFAULT_PATHS_FILE 2>/dev/null); do
+		echo -e "\n${blueColor}- $line${defaultColor}"
+		for directory in $line/*/; do
+			if [ -f "${directory}package.json" ]; then
+				echo -e "  ${greenColor}-> ${defaultColor}$(echo ${directory#"$line"} | tr -d '/')"
+			fi
+		done
+	done
+
+	echo ""
+	exit 0;
+}
+
+function helpPanel() {
+	echo -e "\n${yellowColor}[*]${defaultColor} Usage: opj [OPTION] [PROJECT_FOLDER]"
+	echo -e "\nIt will search for the PROJECT_FOLDER in the directories specified in the OPJ_PATH and open it"
+	echo -e "\nOPTIONS:
+  -a <DIR>    Add <DIR> to the OPJ_PATH.
+  -h          Show this panel.
+  -l          List all the directories in the OPJ_PATH and its projects.
+  -r <DIR>    Remove <DIR> from the OPJ_PATH.\n"
+}
+
+# MAIN
+
+if [ -z "$1" ]; then
+	echo -e "\n${redColor}[!]${defaultColor} No project supplied"
+	helpPanel
+	exit 1
+fi
+
+while getopts "a:r:lh" option; do
+	case "$option" in
+		a) addPath $OPTARG;;
+		r) removePath $OPTARG;;
+		l) listProjects;;
+		h) helpPanel; exit 0;;
+		*) helpPanel; exit 1;;
+	esac
+done
+
+PROJECT_FOLDER="$1"
+
+for line in $(cat $DEFAULT_PATHS_FILE 2>/dev/null); do
+	for directory in $line/*/; do
+		if [ "$(echo ${directory#"$line"} | tr -d '/')" == "$PROJECT_FOLDER" ]; then
+			echo -e "\n${greenColor}[*]${defaultColor} Opening project ${defaultColorBold}$PROJECT_FOLDER${defaultColor}...\n"
+			alacritty --working-directory $directory -e npm run start &>/dev/null &
+			alacritty --working-directory $directory -e npm run server &>/dev/null &
+			code $directory &>/dev/null &
+			exit 0
+		fi
+	done
+done
+
+echo -e "\n${redColor}[!]${defaultColor} The project folder ${defaultColorBold}$PROJECT_FOLDER${defaultColor} does not exist in the path\n"
+exit 1

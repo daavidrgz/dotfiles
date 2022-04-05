@@ -1,4 +1,4 @@
-#  -------- Gtheme: Horizon --------
+# Tokyo-Night
 
 # ██████╗ ██╗   ██╗███╗   ██╗███████╗████████╗
 # ██╔══██╗██║   ██║████╗  ██║██╔════╝╚══██╔══╝
@@ -44,7 +44,6 @@ force_xinerama = false
 #   FRAME
 #----------------------
 
-geometry = "320x480-11+32"
 corner_radius = 6
 
 shrink = no
@@ -58,7 +57,7 @@ padding = 12
 horizontal_padding = 20
 frame_width = 0
 
-frame_color = "#29D398"
+frame_color = "#9ece6a"
 separator_color = frame
 
 sort = yes
@@ -73,7 +72,7 @@ progress_bar_frame_width = 0
 #   FORMAT
 #----------------------
 
-font = DejaVuSansMono Nerd Font Medium 11
+font = DejaVuSansMono Nerd Font Medium 9
 
 markup = full
 
@@ -95,7 +94,7 @@ icon_position = left
 
 text_icon_padding = 0
 
-min_icon_size = 32
+min_icon_size = 20
 max_icon_size = 40
 
 icon_path = /usr/share/icons/Papirus/64x64/apps
@@ -121,23 +120,23 @@ mouse_right_click = close_current
 #----------------------
 
 [urgency_low]
-background = "#1C1E26"
-foreground = "#BABABA"
-highlight = "#25b0bc"
+background = "#1a1b26"
+foreground = "#c0caf5"
+highlight = "#7dcfff"
 timeout = 5
 icon = /usr/share/icons/Papirus/48x48/emblems/emblem-information.svg
 
 [urgency_normal]
-background = "#1C1E26"
-foreground = "#BABABA"
-highlight = "#25b0bc"
+background = "#1a1b26"
+foreground = "#c0caf5"
+highlight = "#7dcfff"
 timeout = 5
 icon = /usr/share/icons/Papirus/48x48/emblems/emblem-information.svg
 
 [urgency_critical]
-background = "#1C1E26"
-foreground = "#BABABA"
-highlight = "#EC6A88"
+background = "#1a1b26"
+foreground = "#c0caf5"
+highlight = "#f7768e"
 timeout = 5
 icon = /usr/share/icons/Papirus/48x48/emblems/emblem-important.svg
 
@@ -258,7 +257,7 @@ new_icon = /usr/share/icons/dunst/system/caps_off.svg
 ; new_icon = /usr/share/icons/dunst/system/color.svg
 ; [color_preview]
 ; appname = "Color Preview"
-; format = "#%s"
+; format = "#<[s"
 ; new_icon = ""
 
 [flameshot]
