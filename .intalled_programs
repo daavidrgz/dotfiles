@@ -244,5 +244,5 @@ zip
 zsh
 zsh-autosuggestions
 zsh-history-substring-search
-zsh-syntax-highlighting
+zsh-syntax-highlighting-git
 zsh-theme-powerlevel10k

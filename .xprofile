@@ -1,0 +1,2 @@
+setxkbmap -layout us -variant altgr-intl
+xset r rate 200 40
