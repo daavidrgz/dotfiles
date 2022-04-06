@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# COLORS
+G="\e[1;32m"
+W="\e[0m"
+W_B="\e[1m"
+
+I_PROGRAMS_FILE=~/.installed_programs
+pacman -Qe | awk '{print $1}' > $I_PROGRAMS_FILE
+echo -e "${G}[+]${W} Programs saved successfully to ${W_B}$I_PROGRAMS_FILE${W}"
