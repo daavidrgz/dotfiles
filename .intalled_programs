@@ -1,4 +1,3 @@
-7-zip-bin
 acpi
 acpid
 alacritty
@@ -48,6 +47,7 @@ feh
 figlet
 firefox
 firejail
+fish
 flameshot
 fzf
 gcc
@@ -115,11 +115,12 @@ onefetch
 openbox
 openssh
 os-prober
+p7zip
 pacman-contrib
 paperview-git
 papirus-icon-theme
 patch
-pavucontrol
+perf
 perl-image-exiftool
 picom-ibhagwan-git
 pipes.sh

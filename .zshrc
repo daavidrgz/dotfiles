@@ -5,9 +5,10 @@ fi
 # Language
 export LANG=en_GB.utf8
 
-# Default editor
+# Default apps
 export VISUAL=nano
 export EDITOR=$VISUAL
+export FILE_EXPLORER=ranger
 
 # Config files
 export XDG_CONFIG_HOME=/home/david/.config
@@ -120,13 +121,14 @@ alias gd='gtheme desktop apply'
 
 # Dir autojump
 [[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
-
 eval $(thefuck --alias)
 
 # Setting the correct key bindings
 bindkey  "^[[H"   beginning-of-line
 bindkey  "^[[F"   end-of-line
 bindkey  "^[[3~"  delete-char
+bindkey  "^[[1;3C" forward-word
+bindkey  "^[[1;3D" backward-word
 
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
@@ -139,3 +141,6 @@ export LESS_TERMCAP_so=$'\E[01;35m'    # begin reverse video
 export LESS_TERMCAP_se=$'\E[0m'        # reset reverse video
 export LESS_TERMCAP_us=$'\E[1;32m'     # begin underline
 export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
+
+fpath=(/home/david/.config/zsh/completions $fpath)
+autoload -Uz compinit && compinit
