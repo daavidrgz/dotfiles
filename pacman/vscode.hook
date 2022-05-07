@@ -1,0 +1,10 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = visual-studio-code-bin
+
+[Action]
+Description = Changes vscode folder owner in order to modify internal css files.
+When = PostTransaction
+Exec = /usr/etc/vscode/change_owner.sh
