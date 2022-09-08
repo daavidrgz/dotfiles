@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Colors
+fg=c0caf5
+wrong=db4b4b
+highlight=565f89
+date=7aa2f7
+verify=7aa2f7
+
+i3lock -n --force-clock \
+-i ~/.config/gtheme/wallpapers/abstract-brush.jpg \
+-e --indicator --radius=25 --ring-width=40 --inside-color=$fg \
+--ring-color=$fg --insidever-color=$verify --ringver-color=$verify \
+--insidewrong-color=$wrong --ringwrong-color=$wrong --line-uses-inside \
+--keyhl-color=$verify --separator-color=$verify --bshl-color=$verify \
+--time-str="%H:%M" --time-size=80 --date-str="%a, %d %b" --date-size=25 \
+--verif-text="Verifying Password..." --wrong-text="Wrong Password!" \
+--noinput-text="" --greeter-text="Type the password to Unlock" \
+--ind-pos="300:450" --time-font="Fira Code:style=Bold" --date-font="Fira Code" \
+--verif-font="Fira Code" --greeter-font="Fira Code" --wrong-font="Fira Code" \
+--verif-size=12 --greeter-size=12 --wrong-size=12 --time-pos="300:300" \
+--date-pos="300:350" --greeter-pos="300:550" --wrong-pos="300:580" \
+--verif-pos="300:580" --date-color=$date --time-color=$date \
+--greeter-color=$fg --wrong-color=$wrong --verif-color=$verify \
+--pointer=default --refresh-rate=0 --pass-media-keys \
+--pass-volume-keys
