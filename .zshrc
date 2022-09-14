@@ -138,7 +138,7 @@ eval $(thefuck --alias)
 [[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
 
 # Work script
-[[ -r "$HOME_DIR/scripts/work.sh" ]] && source $HOME_DIR/scripts/work.sh
+[[ -r "$HOME_DIR/source-scripts/work.sh" ]] && source $HOME_DIR/source-scripts/work.sh
 
 # Setting the correct key bindings
 bindkey  "^[[H"    beginning-of-line
