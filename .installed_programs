@@ -48,12 +48,14 @@ dmenu
 docker
 docker-compose
 dosfstools
+downgrade
 dunst
 efibootmgr
 elixir
 elvish
 eww-wayland-git
 exa
+exercism
 exploitdb
 fakeroot
 feh
@@ -99,6 +101,7 @@ linux
 linux-firmware
 linux-headers
 lolcat
+lxsession-gtk3
 m4
 maim
 make
@@ -122,6 +125,7 @@ neovim
 nerd-fonts-complete
 nerd-fonts-dejavu-complete
 net-tools
+netproc-git
 networkmanager
 newsboat
 nmap
@@ -136,6 +140,7 @@ nvtop
 ocaml
 octave
 onefetch
+opam
 openbox
 openssh
 openssl-1.0
@@ -162,6 +167,7 @@ pulseaudio-bluetooth
 python-attrs
 python-pillow
 python-pip
+qbittorrent
 qt5-graphicaleffects
 qt5-quickcontrols
 qt5-quickcontrols2
