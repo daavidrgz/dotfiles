@@ -12,48 +12,77 @@ W_B="\e[1m"
 
 function cleanSystemCache() {
 	if [[ $EUID -ne 0 ]]; then
-		echo -e "${R}Error:${W} Cannot perform operation. Permission denied"
+		echo -e "${R}[-]${W} Cannot perform operation. Must be run as root!"
 		exit 1
 	fi
 
-	rm -rf /var/cache/* && echo -e "${B}[+]${W} ${G}System${W} cache cleaned" || echo -e "${R}[-]${W} Error while cleaning system cache"
+	[ -d /var/cache ] && rm -rf /var/cache/* && echo -e "${B}[+]${W} ${G}System${W} cache cleaned" ||
+		echo -e "${R}[-]${W} Error while cleaning system cache"
 }
 
 function cleanRootCache() {
 	if [[ $EUID -ne 0 ]]; then
-		echo -e "Cannot perform operation. It must be run as root!"
+		echo -e "${R}[-]${W} Cannot perform operation. Must be run as root!"
 		exit 1
 	fi
 
-	rm -rf /root/.cache/* && echo -e "${B}[+]${W} ${G}Root${W} cache cleaned" || echo -e "${R}[-]${W} Error while cleaning root cache"
+	[ -d /root/.cache ] && rm -rf /root/.cache/* && echo -e "${B}[+]${W} ${G}Root${W} cache cleaned" ||
+		echo -e "${R}[-]${W} Error while cleaning root cache"
 }
 
 function cleanUserCache() {
 	user="$1"
-	rm -rf /home/$user/.cache/* && echo -e "${B}[+]${W} User ${G}$user${W} cache cleaned" || echo -e "${R}[-]${W} Error while cleaning user ${G}$user${W} cache"
+	[ -d /home/$user/.cache ] && rm -rf /home/$user/.cache/* && echo -e "${B}[+]${W} User ${G}$user${W} cache cleaned" ||
+		echo -e "${R}[-]${W} Error while cleaning user ${G}$user${W} cache"
 }
 
-function cleanAllUserCache() {
+function cleanAllUsersCache() {
 	for user in $(ls /home); do
-		if [ "$user" == "lost+found" ]; then
-			continue
-		fi
+		[ "$user" == "lost+found" ] && continue
 		cleanUserCache $user
 	done
+}
+
+function cleanDockerCache() {
+	docker builder prune && echo -e "${B}[+]${W} ${G}Docker${W} cache cleaned" ||
+		echo -e "${R}[-]${W} Error while cleaning docker cache"
+}
+
+function cleanGradleCache() {
+	[ -d ~/.gradle/caches ] && rm -rf ~/.gradle/caches/* && echo -e "${B}[+]${W} ${G}Gradle${W} cache cleaned" ||
+		echo -e "${R}[-]${W} Error while cleaning gradle cache"
 }
 
 function cleanAllCache() {
 	cleanSystemCache
 	cleanRootCache
-	cleanAllUserCache
+	cleanAllUsersCache
+}
+
+function printHelp() {
+	echo -e "${W_B}Usage:${W} clean-cache [options]"
+	echo -e "${W_B}Options:${W}"
+	echo -e "  ${W_B}help, -h, --help${W}  Print this help message"
+	echo -e "  ${W_B}system, -s${W}        Clean system cache"
+	echo -e "  ${W_B}root, -r${W}          Clean root cache"
+	echo -e "  ${W_B}user, -u${W}          Clean user cache"
+	echo -e "  ${W_B}all-users, -au${W}    Clean all users cache except for root"
+	echo -e "  ${W_B}all, -a${W}           Clean all cache except docker and gradle"
+	echo -e "  ${W_B}docker, -d${W}        Clean docker cache"
+	echo -e "  ${W_B}gradle, -g${W}        Clean gradle cache"
 }
 
 case "$1" in
-user) cleanUserCache $(id -u -n) ;;
-system) cleanSystemCache ;;
-all) cleanAllCache ;;
+"help" | "--help" | "-h") printHelp ;;
+"system" | "-s") cleanSystemCache ;;
+"root" | "-r") cleanRootCache ;;
+"user" | "-u") cleanUserCache $(id -u -n) ;;
+"all-users" | "-au") cleanAllUsersCache ;;
+"all" | "-a") cleanAllCache ;;
+"docker" | "-d") cleanDockerCache ;;
+"gradle" | "-g") cleanGradleCache ;;
 *)
-	echo -e -e "Invalid option! Possible values: [user, all, system]"
-	exit 1
+	echo -e "${R}[-]${W} Invalid option!"
+	printHelp
 	;;
 esac
