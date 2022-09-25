@@ -1,0 +1,10 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = nvidia-open-dkms
+
+[Action]
+Description = Applies Nvidia NVENC patches in order to use it
+When = PostTransaction
+Exec = /etc/pacman.d/hooks/nvidia-patch.sh

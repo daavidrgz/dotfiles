@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Colors
+R="\e[1;31m"
+G="\e[1;32m"
+Y="\e[1;33m"
+B="\e[1;34m"
+M="\e[1;35m"
+C="\e[1;36m"
+W="\e[0m"
+
+function checkRoot() {
+	if [[ $EUID -ne 0 ]]; then
+		echo -e "${R}[-] Error${W}: This script must be run as root"
+		exit 1
+	fi
+}
+
+function start() {
+	checkRoot
+	echo -e "[+] Starting Tipi..."
+	cd /home/david/tipi
+	./scripts/start.sh
+}
+
+function stop() {
+	checkRoot
+	echo -e "[+] Stopping Tipi..."
+	cd /home/david/tipi
+	./scripts/stop.sh
+}
+
+function help() {
+	echo -e "${Y}Usage:${W} tipi [options]"
+	echo -e "${Y}Options:${W}"
+	echo -e "  ${G}start, -s${W}   Start Tipi"
+	echo -e "  ${G}stop, -t${W}    Stop Tipi"
+	echo -e "  ${G}help, -h${W}    Show this help"
+}
+
+case $1 in
+"help" | "-h") help ;;
+"start" | "-s") start ;;
+"stop" | "-t") stop ;;
+*) help ;;
+esac

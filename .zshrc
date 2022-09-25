@@ -29,6 +29,9 @@ export PATH=$N_PREFIX/bin:$PATH
 # Rust binaries
 export PATH=$PATH:$HOME_DIR/.cargo/bin
 
+# Ocaml binaries
+export PATH=$PATH:$HOME_DIR/.opam/default/bin
+
 # Java
 #export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
 #export JAVA_HOME=/usr/lib/jvm/java-18-openjdk
@@ -53,6 +56,7 @@ autoload -Uz compinit && compinit -u
 source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
@@ -98,6 +102,7 @@ alias rg='rg --hidden --no-ignore'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias cpufetch='cpufetch --logo-intel-new'
+alias df='df -h'
 
 # Git aliases
 alias ga='git add'
@@ -146,6 +151,10 @@ bindkey  "^[[F"    end-of-line
 bindkey  "^[[3~"   delete-char
 bindkey  "^[[1;3C" forward-word
 bindkey  "^[[1;3D" backward-word
+
+# History substring bindings
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
 
 # Colored man pages
 export LESS_TERMCAP_mb=$'\E[1;34m'     # begin bold

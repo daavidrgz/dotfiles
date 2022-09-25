@@ -1,0 +1,7 @@
+[user]
+    email = david.rbacelar@udc.es
+    name = David Rodriguez
+[includeIf "gitdir:~/work/"]
+    path = ~/work/.gitconfig
+[push]
+	autoSetupRemote = true
