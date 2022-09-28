@@ -48,17 +48,20 @@ HISTSIZE=50000
 SAVEHIST=50000
 bindkey -e
 
-# Completions + gtheme
-fpath=($HOME_DIR/.gtheme/completions $fpath)
-autoload -Uz compinit && compinit -u
+# ZSH antidote to load plugins
+ANTIDOTE_HOME=$HOME_DIR/.antidote
+source /usr/share/zsh-antidote/antidote.zsh
+antidote load
 
-# ZSH Plugins
-source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme
-source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
+# Powerlevel10k config
+[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
 
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+# Suffix aliases
+alias -g ...='../..'
+alias -g ....='../../..'
+alias -g .....='../../../..'
+alias -g ......='../../../../..'
+alias -g .......='../../../../../..'
 
 # Temporal aliases
 alias cdd="cd $HOME_DIR/github/gtheme/desktops"
@@ -100,7 +103,6 @@ alias ncm='ncmpcpp'
 alias c='code .'
 alias rg='rg --hidden --no-ignore'
 alias ..='cd ..'
-alias ...='cd ../..'
 alias cpufetch='cpufetch --logo-intel-new'
 alias df='df -h'
 
@@ -136,12 +138,6 @@ alias npd='npm run dev'
 alias gt='gtheme theme apply'
 alias gd='gtheme desktop apply'
 
-# Command corrector
-eval $(thefuck --alias)
-
-# Dir autojump
-[[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
-
 # Work script
 [[ -r "$HOME_DIR/source-scripts/work.sh" ]] && source $HOME_DIR/source-scripts/work.sh
 
@@ -152,10 +148,6 @@ bindkey  "^[[3~"   delete-char
 bindkey  "^[[1;3C" forward-word
 bindkey  "^[[1;3D" backward-word
 
-# History substring bindings
-bindkey '^[[A' history-substring-search-up
-bindkey '^[[B' history-substring-search-down
-
 # Colored man pages
 export LESS_TERMCAP_mb=$'\E[1;34m'     # begin bold
 export LESS_TERMCAP_md=$'\E[1;34m'     # begin blink
@@ -164,3 +156,8 @@ export LESS_TERMCAP_so=$'\E[01;35m'    # begin reverse video
 export LESS_TERMCAP_se=$'\E[0m'        # reset reverse video
 export LESS_TERMCAP_us=$'\E[1;32m'     # begin underline
 export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
+
+# Completions + gtheme
+fpath=($HOME_DIR/.gtheme/completions $fpath)
+autoload -Uz compinit && compinit -u
+zstyle ':completion:*' menu select
