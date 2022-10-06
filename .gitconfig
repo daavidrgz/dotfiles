@@ -1,5 +1,5 @@
 [user]
-    email = david.rbacelar@udc.es
+    email = davidrbacelar@gmail.es
     name = David Rodriguez
 [includeIf "gitdir:~/work/"]
     path = ~/work/.gitconfig

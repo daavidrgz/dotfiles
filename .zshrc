@@ -102,7 +102,6 @@ alias r='ranger'
 alias ncm='ncmpcpp'
 alias c='code .'
 alias rg='rg --hidden --no-ignore'
-alias ..='cd ..'
 alias cpufetch='cpufetch --logo-intel-new'
 alias df='df -h'
 
@@ -131,7 +130,18 @@ alias cc='cargo check'
 alias cr='cargo run -q'
 alias ct='cargo test'
 
-# Node aliases
+# Mix aliases
+alias mixt='mix test --max-failures 1'
+alias mixta='mix test'
+alias mixdia='mix dialyzer'
+alias mixcred='mix credo'
+alias mixci='mix format && mix credo && mix dialyzer && mix test && mix compile'
+alias mixc='mix compile'
+alias mixd='mix deps.get'
+alias mixclean='mix deps.clean --unused'
+
+# Npm aliases
+alias npi='npm install'
 alias npd='npm run dev'
 
 # Gtheme aliases
@@ -140,6 +150,10 @@ alias gd='gtheme desktop apply'
 
 # Work script
 [[ -r "$HOME_DIR/source-scripts/work.sh" ]] && source $HOME_DIR/source-scripts/work.sh
+
+# Setting the keybindings for history substring search
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
 
 # Setting the correct key bindings
 bindkey  "^[[H"    beginning-of-line
