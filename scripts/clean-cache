@@ -11,28 +11,13 @@ W="\e[0m"
 W_B="\e[1m"
 
 function cleanSystemCache() {
-	if [[ $EUID -ne 0 ]]; then
-		echo -e "${R}[-]${W} Cannot perform operation. Must be run as root!"
-		exit 1
-	fi
-
-	[ -d /var/cache ] && rm -rf /var/cache/* && echo -e "${B}[+]${W} ${G}System${W} cache cleaned" ||
+	[ -d /var/cache ] && sudo rm -rf /var/cache/* && echo -e "${B}[+]${W} ${G}System${W} cache cleaned" ||
 		echo -e "${R}[-]${W} Error while cleaning system cache"
-}
-
-function cleanRootCache() {
-	if [[ $EUID -ne 0 ]]; then
-		echo -e "${R}[-]${W} Cannot perform operation. Must be run as root!"
-		exit 1
-	fi
-
-	[ -d /root/.cache ] && rm -rf /root/.cache/* && echo -e "${B}[+]${W} ${G}Root${W} cache cleaned" ||
-		echo -e "${R}[-]${W} Error while cleaning root cache"
 }
 
 function cleanUserCache() {
 	user="$1"
-	[ -d /home/$user/.cache ] && rm -rf /home/$user/.cache/* && echo -e "${B}[+]${W} User ${G}$user${W} cache cleaned" ||
+	[ -d /home/$user/.cache ] && rm -rf /home/$user/.cache/* && rm -rf /home/$user/.npm/_cacache && echo -e "${B}[+]${W} User ${G}$user${W} cache cleaned" ||
 		echo -e "${R}[-]${W} Error while cleaning user ${G}$user${W} cache"
 }
 
@@ -55,7 +40,6 @@ function cleanGradleCache() {
 
 function cleanAllCache() {
 	cleanSystemCache
-	cleanRootCache
 	cleanAllUsersCache
 }
 
@@ -64,7 +48,6 @@ function printHelp() {
 	echo -e "${W_B}Options:${W}"
 	echo -e "  ${W_B}help, -h, --help${W}  Print this help message"
 	echo -e "  ${W_B}system, -s${W}        Clean system cache"
-	echo -e "  ${W_B}root, -r${W}          Clean root cache"
 	echo -e "  ${W_B}user, -u${W}          Clean user cache"
 	echo -e "  ${W_B}all-users, -au${W}    Clean all users cache except for root"
 	echo -e "  ${W_B}all, -a${W}           Clean all cache except docker and gradle"
@@ -75,7 +58,6 @@ function printHelp() {
 case "$1" in
 "help" | "--help" | "-h") printHelp ;;
 "system" | "-s") cleanSystemCache ;;
-"root" | "-r") cleanRootCache ;;
 "user" | "-u") cleanUserCache $(id -u -n) ;;
 "all-users" | "-au") cleanAllUsersCache ;;
 "all" | "-a") cleanAllCache ;;

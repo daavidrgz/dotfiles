@@ -144,3 +144,4 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 # default workspace for Executors
 
 # JINA_CLI_END
+. "$HOME/.cargo/env"
