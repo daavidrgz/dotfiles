@@ -1,0 +1,15 @@
+#!/bin/bash
+
+case $1	in
+	mobile)
+		echo "Xft.dpi: 96" > ~/.Xresources
+		;;
+	docked)
+		echo "Xft.dpi: 120" > ~/.Xresources
+		;;
+	*)
+		echo "Usage: $0 {mobile|docked}"
+		exit 1
+esac
+
+shutdown now
