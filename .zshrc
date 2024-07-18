@@ -9,7 +9,7 @@ HOME_DIR=/home/david
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:$HOME_DIR/.local/bin
 
 # Language
-export LANG=en_GB.utf8
+export LANG=en_US.utf8
 
 # Default apps
 export VISUAL=nano
