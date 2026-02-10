@@ -2,3 +2,6 @@ setxkbmap -layout us -variant altgr-intl
 xset r rate 200 40
 /usr/bin/lxpolkit &
 udiskie &
+/home/david/scripts/autohide-polybar &
+/usr/bin/libinput-gestures &
+export GTK_THEME=Adwaita:dark

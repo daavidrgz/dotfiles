@@ -14,10 +14,11 @@ export LANG=en_US.utf8
 # Default apps
 export VISUAL=nano
 export EDITOR=$VISUAL
-export FILE_EXPLORER=ranger
+export FILE_EXPLORER=yazi
 
 # Config files
 export XDG_CONFIG_HOME=$HOME_DIR/.config
+export XDG_CACHE_HOME=$HOME_DIR/.cache
 
 # Sxhkd
 export SXHKD_SHELL=/bin/bash
@@ -97,21 +98,20 @@ alias xokas='firefox twitch.tv/elxokas &>/dev/null &; disown %1'
 alias ttyc='tty-clock -c -s -b'
 alias purge='sudo pacman -Rns $(pacman -Qdtq)'
 alias bcat='/bin/cat'
+alias clip='xclip -selection clipboard'
 alias pdf='zathura --fork'
 alias dup='kitty . &; disown'
 alias f='fuck'
 alias du='du -d 1 -ha'
 alias ell='exa -laF --icons --group-directories-first'
 alias unimatrix='unimatrix -s 96 -f -l o'
-alias r='ranger'
+alias r='yazi'
 alias ncm='ncmpcpp'
 alias c='code .'
 alias rg='rg --hidden --no-ignore'
 alias cpufetch='cpufetch --logo-intel-new'
 alias df='df -h'
 alias svgtopdf='inkscape --export-type=pdf'
-alias shm='dpi-shutdown mobile'
-alias shd='dpi-shutdown docked'
 alias cleantex='rm *.aux *.fdb_latexmk *.fls *.synctex.gz *.log'
 
 # Git aliases
@@ -180,10 +180,12 @@ export LESS_TERMCAP_se=$'\E[0m'        # reset reverse video
 export LESS_TERMCAP_us=$'\E[1;32m'     # begin underline
 export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 
-# Completions + gtheme
-fpath=($HOME_DIR/.gtheme/completions $fpath)
-autoload -Uz compinit && compinit -u
-
 # Completions style
 zstyle ':completion:*' menu select
 zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+
+# To avoid this: https://github.com/romkatv/powerlevel10k/issues/1554
+unset ZSH_AUTOSUGGEST_USE_ASYNC
+
+fpath=(/home/david/.gtheme/completions $fpath)
+autoload -Uz compinit && compinit -u -d $XDG_CACHE_HOME/zsh/.zcompdump
