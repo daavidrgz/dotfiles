@@ -648,8 +648,8 @@ seahorse &       # File → Import… → pick .p12
 ### 15.D  Tighten permissions
 
 ```bash
-chmod 700 ~/certificates
-chmod 600 ~/private/certificates/*.p12
+chmod 700 ~/private ~/private/certificates ~/private/recovery-codes
+chmod 600 ~/private/certificates/*.p12 ~/private/recovery-codes/*.txt 2>/dev/null
 ```
 
 The off-device backup keeps the canonical copy; the local `~/private/certificates/` is just for the next import after a future re-install.
