@@ -457,8 +457,19 @@ sudo mkinitcpio -P    # rebuild with the dotfiles version
 
 ### Display manager + greeter theme
 
+The active SDDM theme is **Sugar Candy** ([upstream framagit](https://framagit.org/MarianArlt/sddm-sugar-candy)) — not packaged in pacman/AUR, so dotfiles ships its own copy. The Tokyo-Night colour overrides live in `sddm/theme.conf.user`.
+
 ```bash
-sudo cp -r sddm/themes/* /usr/share/sddm/themes/        # if dotfiles ships themes
+# Install the bundled theme into the system path SDDM scans
+sudo cp -r sddm/themes/sugar-candy /usr/share/sddm/themes/sugar-candy
+
+# Per-user colour/font override (Tokyo-Night palette, GeistMono Nerd Font)
+mkdir -p ~/.config/sddm
+cp sddm/theme.conf.user ~/.config/sddm/theme.conf.user
+
+# sddm.conf already sets `[Theme] Current=sugar-candy` (installed in the
+# earlier `sudo install -m644 etc/sddm.conf.d/sddm.conf …` step), so the
+# greeter picks it up on next start.
 sudo systemctl enable sddm.service
 ```
 
