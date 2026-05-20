@@ -24,11 +24,10 @@
 11. [Restore packages from `.installed_programs`](#11--restore-packages-from-installed_programs)
 12. [Symlink configs from the dotfiles repo](#12--symlink-configs-from-the-dotfiles-repo)
 13. [System-wide configs (NVIDIA, ASUS, X11, SDDM, services)](#13--system-wide-configs-nvidia-asus-x11-sddm-services)
-14. [Restore SSH, GPG, secrets, browser data, `~/.claude`](#14--restore-ssh-gpg-secrets-browser-data)
+14. [Restore SSH, GPG, secrets, `~/.claude`, skills, Archy](#14--restore-ssh-gpg-secrets-claude-skills-archy)
 15. [Install personal certificates (`.p12`)](#15--install-personal-certificates-p12)
-16. [Set up the homeserver SSH key pair (hermo.dev)](#16--set-up-the-homeserver-ssh-key-pair-hermodev)
-17. [Final reboot and verification](#17--final-reboot-and-verification)
-18. [Things to remember after everything works](#18--things-to-remember-after-everything-works)
+16. [Final reboot and verification](#16--final-reboot-and-verification)
+17. [Things to remember after everything works](#17--things-to-remember-after-everything-works)
 
 ---
 
@@ -47,7 +46,6 @@ The pendrive backup should contain:
 
   Back this whole tree up with one `rsync -a ~/private/ <USB>/private/` — the simplest piece of the pendrive backup.
 - **The entire `~/.claude/` directory**. This holds *everything* about Claude Code on this machine: installed skills, plugins, MCP server configs (`~/.claude/settings.json`, `~/.claude/settings.local.json`), all project sessions and transcripts (`~/.claude/projects/*/sessions/*.jsonl`), the file-based memory system, keybindings, hooks, and the credentials/token cache. **None of it lives in the cloud.** A single `rsync -a ~/.claude/ <USB>/claude-backup/` (or `tar`) is enough.
-- Browser export: bookmarks + saved passwords from Chrome, Brave, Firefox, Vivaldi, Edge, Opera. Easiest path: ensure each browser is signed in to its sync account *before* sending the laptop, and **screenshot the list of installed extensions** for verification.
 - 2FA seeds: if any TOTP is *only* on this laptop (not on the phone authenticator), export the seeds first.
 - `~/.config/gtheme/` and `~/.gtheme/` if any custom theme/desktop files were authored locally and not pushed.
 - Uncommitted work in every clone under `~/github/*` — run `for d in ~/github/*/; do (cd "$d" && git status -s); done` and resolve every dirty repo *before* the laptop leaves.
@@ -598,7 +596,7 @@ If `asusctl` is not in the official repos at the time of restore, `yay -S asusct
 
 ---
 
-## 14 — Restore SSH, GPG, secrets, browser data
+## 14 — Restore SSH, GPG, secrets, `~/.claude`, skills, Archy
 
 These come from the off-device backup, **never** from this public repo.
 
@@ -636,15 +634,12 @@ done
 
 > **CONFIRM with the human** before running anything that touches `~/.gnupg/` — if a previous import already happened, copying over it can corrupt the trustdb.
 
-### Browser data
-
-For Chrome/Brave/Firefox/Vivaldi/Edge/Opera, the recommended path is to sign in and let cloud sync restore bookmarks, history, and (in browsers that support it) passwords. Then install the extensions from the screenshot taken in §0. **Bitwarden is not installed**: passwords either live in browser sync or in the off-device backup as a Bitwarden export — confirm with the human which one.
-
 ### Restore `~/.claude/` (sessions, memory, plugins, MCP, credentials)
 
 ```bash
-rsync -a /run/media/david/<USB>/claude-backup/ ~/.claude/
-# OR: tar -xf claude-backup.tar.zst -C ~/
+# Exclude skills/ from the rsync — the canonical copy comes from the dotfiles
+# repo in the next step, and we don't want stale backup state racing with it.
+rsync -a --exclude='skills/' /run/media/david/<USB>/claude-backup/ ~/.claude/
 chmod 600 ~/.claude/.credentials.json 2>/dev/null
 ls ~/.claude/projects/ | head
 ```
@@ -653,23 +648,21 @@ After that, opening `claude` in any of the restored project directories should r
 
 ### Restore skills (`~/.claude/skills/`)
 
-The canonical copy of user-authored skills lives in this repo at `skills/`. Restore the same layout that Archy and Claude Code both expect: real directories under `~/.claude/skills/user/`, with a top-level symlink per skill so Claude Code can find them.
+Single flat layout: real skill directories under `~/.claude/skills/`, and one symlink at `~/.config/archy/skills/user` so Archy reads the same library. Nothing nested, no per-skill symlinks.
 
 ```bash
-mkdir -p ~/.claude/skills/user ~/.claude/skills/agent
-# Copy each skill into the canonical user/ dir
+mkdir -p ~/.claude/skills
 for s in ~/github/dotfiles/skills/*/; do
-    name=$(basename "$s")
-    cp -r "$s" ~/.claude/skills/user/"$name"
-    ln -snf ~/.claude/skills/user/"$name" ~/.claude/skills/"$name"
+    cp -r "$s" ~/.claude/skills/
 done
-# Make ~/.config/archy/skills share the same library (matches the previous setup)
-mkdir -p ~/.config/archy
-ln -snf ~/.claude/skills ~/.config/archy/skills
-ls ~/.claude/skills/
-```
 
-The `~/.claude/skills/agent/` directory is intentionally **not** in the repo — it's Archy's mutable scratch space. Archy will populate it on demand.
+# Archy expects two skill pools:
+#   - user/  → shared with Claude Code, lives in ~/.claude/skills (symlinked)
+#   - agent/ → Archy's own mutable scratch, separate real directory
+mkdir -p ~/.config/archy/skills/agent
+ln -snf ~/.claude/skills ~/.config/archy/skills/user
+ls ~/.claude/skills/ ~/.config/archy/skills/
+```
 
 ### Restore Archy's CLAUDE.md and `archy.toml`
 
@@ -677,40 +670,22 @@ The `~/.claude/skills/agent/` directory is intentionally **not** in the repo —
 mkdir -p ~/.config/archy/memory
 ln -snf ~/github/dotfiles/archy/CLAUDE.md  ~/.config/archy/CLAUDE.md
 cp        ~/github/dotfiles/archy/archy.toml ~/.config/archy/archy.toml
-# memory/ stays local and is restored from the off-device backup if it had any notes
+# memory/ stays local and is restored from the pendrive if it had any notes
 ```
 
 `CLAUDE.md` is symlinked (so future edits land in this repo); `archy.toml` is copied (it gets edited by `archy` itself when models or paths change, and you don't want those edits leaking into the public repo).
+
+> Once SSH is restored, `ssh hermo.dev whoami` should print `server` immediately — the restored `~/.ssh/id_rsa` is the same key the server already trusts.
 
 ---
 
 ## 15 — Install personal certificates (`.p12`)
 
-The Spanish FNMT-style `.p12` certificates restored in §0 to `~/private/certificates/` (`certificado-salvi.p12`, `certificado-v2.p12`) need to be imported into each browser/store that uses them. They are *not* TLS server certs — they are client/personal certs used to sign documents and authenticate to AEAT, Seguridad Social, DGT, university portals, etc. Reference: <https://wiki.archlinux.org/title/User:Grawity/Importing_personal_certificates>.
+The Spanish FNMT-style `.p12` certificates restored in §0 to `~/private/certificates/` (`certificado-salvi.p12`, `certificado-v2.p12`) need to be imported into the shared Chromium NSS database. They are *not* TLS server certs — they are client/personal certs used to sign documents and authenticate to AEAT, Seguridad Social, DGT, university portals, etc.
 
 > **Never** add a personal `.p12` to the system-wide trust store (`/etc/ca-certificates/trust-source/`). That trust store is for **issuers** of certificates, not for personal end-entity certs. Putting yours there does nothing useful and weakens trust validation.
 
-### 15.A  Firefox / Thunderbird (NSS database)
-
-GUI path:
-
-1. Open Firefox → `about:preferences#privacy` → scroll to **Certificates** → **View Certificates…** → tab **Your Certificates** → **Import…**
-2. Pick a `.p12` from `~/private/certificates/`, type the export password (the one set when the cert was originally issued).
-3. Repeat for each cert. They appear under the issuer (FNMT-RCM, etc.).
-
-CLI path (`pacman -S nss`):
-
-```bash
-certutil -d sql:$HOME/.mozilla/firefox/<profile>.default-release -L      # list
-pk12util -i ~/private/certificates/certificado-salvi.p12 \
-         -d sql:$HOME/.mozilla/firefox/<profile>.default-release
-```
-
-`pk12util` will prompt for the `.p12` password, then the NSS DB password (Firefox's "Master Password" — leave empty if you never set one).
-
-### 15.B  Chromium-based browsers (Chrome, Brave, Edge, Opera, Vivaldi)
-
-All Chromium browsers on Linux share **one** NSS database at `~/.pki/nssdb`. Import once, every Chromium browser sees it.
+All Chromium browsers on Linux (Chrome, Brave, Edge, Opera, Vivaldi) share **one** NSS database at `~/.pki/nssdb`. Import once, every Chromium browser sees it.
 
 ```bash
 mkdir -p ~/.pki/nssdb
@@ -724,64 +699,20 @@ Then in Chrome/Brave: `chrome://settings/certificates` → tab **Your Certificat
 
 > **Gotcha**: snap- or flatpak-packaged Chromiums use a sandboxed home and **don't** see `~/.pki`. Install Chromium-family browsers from pacman/AUR so this import path keeps working.
 
-### 15.C  GUI tools that look at GNOME keyring (Evolution, etc.)
-
-If any GNOME app needs the certs, use Seahorse:
-
-```bash
-sudo pacman -S seahorse gnome-keyring
-seahorse &       # File → Import… → pick .p12
-```
-
-### 15.D  Tighten permissions
+### Tighten permissions
 
 ```bash
 chmod 700 ~/private ~/private/certificates ~/private/recovery-codes
 chmod 600 ~/private/certificates/*.p12 ~/private/recovery-codes/*.txt 2>/dev/null
 ```
 
-The off-device backup keeps the canonical copy; the local `~/private/certificates/` is just for the next import after a future re-install.
+The pendrive backup keeps the canonical copy; the local `~/private/certificates/` is just for the next import after a future re-install.
+
+References: <https://wiki.archlinux.org/title/User:Grawity/Importing_personal_certificates>.
 
 ---
 
-## 16 — Set up the homeserver SSH key pair (hermo.dev)
-
-Goal: be able to `ssh hermo.dev` from this laptop without typing a password. The phone already has a public key registered on the server (mentioned by the human), so the strategy is **generate a new pair on the laptop and add the public half via the phone's existing access**, *not* recover the old `id_rsa` (which already comes back as part of §14 anyway — this section is for setting up a *new* key if the user wants one per device, which is the cleaner pattern).
-
-Skip this entire section if `ssh hermo.dev` already works after §14 — that means the restored `~/.ssh/id_rsa` is the same key the server still trusts.
-
-1. Generate a new key, ed25519, no passphrase if used by scripts (the human decides):
-   ```bash
-   ssh-keygen -t ed25519 -C "david@azbook14-$(date +%Y%m%d)" -f ~/.ssh/id_ed25519_hermo
-   ```
-2. Add `~/.ssh/config` block so the new key is picked automatically:
-   ```sshconfig
-   Host hermo.dev
-       HostName hermo.dev
-       User server
-       Port 45811
-       IdentityFile ~/.ssh/id_ed25519_hermo
-       IdentitiesOnly yes
-   ```
-   (Replace the existing `Host hermo.dev` block from the restored `config`. The repo has the canonical block in `.ssh/config` — but since `.ssh/` is *not* in this repo, the human edits it manually.)
-3. **From the phone** (which already has access), SSH into the server and append the new pubkey:
-   ```bash
-   # on the phone, in Termux or equivalent
-   cat | ssh -p 45811 server@hermo.dev 'cat >> ~/.ssh/authorized_keys'
-   # then paste the contents of id_ed25519_hermo.pub from the laptop (cat'd to screen,
-   # transcribed, or shared via a one-shot link)
-   ```
-   Alternative path if the phone has `scp`: `scp id_ed25519_hermo.pub` to the phone first, then `cat .../id_ed25519_hermo.pub | ssh ... 'cat >> ~/.ssh/authorized_keys'`.
-4. Test from the laptop: `ssh hermo.dev whoami` → should print `server` without prompting for a password.
-5. Once verified, **optionally** revoke the old key by editing `~/.ssh/authorized_keys` on hermo.dev and removing the `david@Lenovo-Legion`-tagged line (that's the very old laptop's key). Do this *after* both phone and laptop access are confirmed.
-
-References:
-- Arch Wiki SSH keys: <https://wiki.archlinux.org/title/SSH_keys>
-- `authorized_keys` format: <https://wiki.archlinux.org/title/OpenSSH#authorized_keys>
-
----
-
-## 17 — Final reboot and verification
+## 16 — Final reboot and verification
 
 ```bash
 sudo reboot
@@ -806,20 +737,12 @@ Checklist (the agent runs each, the human eyeballs):
 
 ---
 
-## 18 — Things to remember after everything works
+## 17 — Things to remember after everything works
 
-- **Claude Code conversations are local.** `~/.claude/projects/*/sessions/*.jsonl` is the only copy. Anything saved in `~/.claude/projects/-home-david-github-dotfiles/memory/MEMORY.md` and friends is also local. If they weren't restored from the off-device backup in §14, they are gone forever — there is no cloud copy. Anthropic does keep usage telemetry but **not the message contents**.
-- **The Windows partition seen at `/mnt` was wiped** by ASUS. Anything that was only in `/mnt/Users/david/{Desktop,Documents,Pictures,Downloads,OneDrive,Music,Videos}` and not in the off-device backup is gone. Specifically the certificate `certificadoDavid.p12` and `github-recovery-codes.txt` — both flagged in §0.
-- **Re-add the new laptop's SSH/GPG key to GitHub**: <https://github.com/settings/keys>. If §14 restored the previous key it's already there; if §15 generated a fresh one for this device, add the new pubkey now.
-- **2FA recovery codes**: regenerate them on Github/Google/etc. after first sign-in, and store the new codes off-device.
-- **Update Wi-Fi passwords**: `nmcli` configs live at `/etc/NetworkManager/system-connections/` and are *not* in this repo (they contain passwords). The human will re-enter them per network.
-- **Reapply gtheme periodically** if you change desktops/themes: `gtheme update && gtheme desktop apply hypr && gtheme theme apply <name>`. The configs under `~/.config/{hypr,waybar,quickshell,…}/` are owned by gtheme and may get rewritten by it.
-- **Refresh `.installed_programs` periodically**:
-  ```bash
-  pacman -Qqe | sort > ~/github/dotfiles/.installed_programs
-  ```
-  This single list covers both official-repo and AUR packages; `yay` resolves both transparently on restore.
-- **Things deliberately NOT in this repo (and never should be)**: `~/.ssh/id_rsa`, `~/.gnupg/`, `~/.secrets`, `~/.config/gh/hosts.yml`, `/etc/NetworkManager/system-connections/`, browser profiles. Keep them in the off-device backup.
+- **Claude Code conversations are local.** `~/.claude/projects/*/sessions/*.jsonl` is the only copy. The file-based memory under `~/.claude/projects/*/memory/` is also local. If they weren't restored from the pendrive in §14, they are gone forever — there is no cloud copy. Anthropic does keep usage telemetry but **not the message contents**.
+- **The Windows partition seen at `/mnt` was wiped** when you reinstalled in §2. Anything that was only on Windows and not in the pendrive backup is gone.
+- **Re-add the laptop's SSH/GPG key to GitHub** if it isn't already: <https://github.com/settings/keys>.
+- **2FA recovery codes**: regenerate them on Github/Google/etc. after first sign-in, and store the new codes on the pendrive (`~/private/recovery-codes/`).
 
 ---
 
