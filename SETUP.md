@@ -43,7 +43,11 @@ The off-device backup should contain:
 - `~/.secrets` (small file, ~1 KB, contains plaintext secrets used by shell scripts).
 - `~/.gitconfig` (top-level `[user]` block — the rest is re-created from this repo).
 - `~/.config/gh/hosts.yml` (GitHub CLI token; can also be re-generated with `gh auth login`).
-- `~/certificates/` — `.p12` personal certificates (currently `certificado-salvi.p12` and `certificado-v2.p12`). The third certificate, `certificadoDavid.p12`, lives on the Windows desktop (`/mnt/Users/david/Desktop/`) — copy that one to `~/certificates/` too before the laptop ships so the backup is in a single directory.
+- **`~/private/`** — the single consolidated source-of-truth directory for sensitive files. Permissions `700`. Contains:
+  - `private/certificates/` — `.p12` personal certificates (`certificado-salvi.p12`, `certificado-v2.p12`; `certificadoDavid.p12` on the Windows desktop is the same content as `certificado-v2.p12`, no separate backup needed).
+  - `private/recovery-codes/` — 2FA / account recovery codes pulled off the Windows partition (currently `github.txt`). Add new ones here as services rotate their codes.
+
+  Back this whole tree up with one `rsync -a ~/private/ <external>/private/` — it's the simplest piece of the off-device backup.
 - **The entire `~/.claude/` directory**. This holds *everything* about Claude Code on this machine: installed skills, plugins, MCP server configs (`~/.claude/settings.json`, `~/.claude/settings.local.json`), all project sessions and transcripts (`~/.claude/projects/*/sessions/*.jsonl`), the file-based memory system (`~/.claude/projects/-home-david-github-dotfiles/memory/*.md` and equivalents for every other project), keybindings, hooks, and the credentials/token cache. **None of it lives in the cloud.** A single `rsync -a ~/.claude/ <external>/claude-backup/` (or `tar`) is enough.
 - Browser export: bookmarks + saved passwords from Chrome, Brave, Firefox, Vivaldi, Edge, Opera. Easiest path: ensure each browser is signed in to its sync account *before* sending the laptop, and **screenshot the list of installed extensions** for verification.
 - 2FA seeds: if any TOTP is *only* on this laptop (not on the phone authenticator), export the seeds first. The mobile authenticator is the source of truth — if all 2FA already lives there, nothing extra to do.
@@ -594,7 +598,7 @@ cp        ~/github/dotfiles/archy/archy.toml ~/.config/archy/archy.toml
 
 ## 15 — Install personal certificates (`.p12`)
 
-The Spanish FNMT-style `.p12` certificates restored in §0 to `~/certificates/` (e.g. `certificado-salvi.p12`, `certificado-v2.p12`, `certificadoDavid.p12`) need to be imported into each browser/store that uses them. They are *not* TLS server certs — they are client/personal certs used to sign documents and authenticate to AEAT, Seguridad Social, DGT, university portals, etc. Reference: <https://wiki.archlinux.org/title/User:Grawity/Importing_personal_certificates>.
+The Spanish FNMT-style `.p12` certificates restored in §0 to `~/private/certificates/` (`certificado-salvi.p12`, `certificado-v2.p12`) need to be imported into each browser/store that uses them. They are *not* TLS server certs — they are client/personal certs used to sign documents and authenticate to AEAT, Seguridad Social, DGT, university portals, etc. Reference: <https://wiki.archlinux.org/title/User:Grawity/Importing_personal_certificates>.
 
 > **Never** add a personal `.p12` to the system-wide trust store (`/etc/ca-certificates/trust-source/`). That trust store is for **issuers** of certificates, not for personal end-entity certs. Putting yours there does nothing useful and weakens trust validation.
 
@@ -603,14 +607,14 @@ The Spanish FNMT-style `.p12` certificates restored in §0 to `~/certificates/` 
 GUI path:
 
 1. Open Firefox → `about:preferences#privacy` → scroll to **Certificates** → **View Certificates…** → tab **Your Certificates** → **Import…**
-2. Pick a `.p12` from `~/certificates/`, type the export password (the one set when the cert was originally issued).
+2. Pick a `.p12` from `~/private/certificates/`, type the export password (the one set when the cert was originally issued).
 3. Repeat for each cert. They appear under the issuer (FNMT-RCM, etc.).
 
 CLI path (`pacman -S nss`):
 
 ```bash
 certutil -d sql:$HOME/.mozilla/firefox/<profile>.default-release -L      # list
-pk12util -i ~/certificates/certificado-salvi.p12 \
+pk12util -i ~/private/certificates/certificado-salvi.p12 \
          -d sql:$HOME/.mozilla/firefox/<profile>.default-release
 ```
 
@@ -623,10 +627,9 @@ All Chromium browsers on Linux share **one** NSS database at `~/.pki/nssdb`. Imp
 ```bash
 mkdir -p ~/.pki/nssdb
 certutil -d sql:$HOME/.pki/nssdb -N --empty-password    # first time only
-pk12util -i ~/certificates/certificado-salvi.p12 -d sql:$HOME/.pki/nssdb
-pk12util -i ~/certificates/certificado-v2.p12    -d sql:$HOME/.pki/nssdb
-pk12util -i ~/certificates/certificadoDavid.p12  -d sql:$HOME/.pki/nssdb
-certutil -d sql:$HOME/.pki/nssdb -L                     # verify
+pk12util -i ~/private/certificates/certificado-salvi.p12 -d sql:$HOME/.pki/nssdb
+pk12util -i ~/private/certificates/certificado-v2.p12    -d sql:$HOME/.pki/nssdb
+certutil -d sql:$HOME/.pki/nssdb -L                      # verify
 ```
 
 Then in Chrome/Brave: `chrome://settings/certificates` → tab **Your Certificates** — the imported certs are listed.
@@ -646,10 +649,10 @@ seahorse &       # File → Import… → pick .p12
 
 ```bash
 chmod 700 ~/certificates
-chmod 600 ~/certificates/*.p12
+chmod 600 ~/private/certificates/*.p12
 ```
 
-The off-device backup keeps the canonical copy; the local `~/certificates/` is just for the next import after a future re-install.
+The off-device backup keeps the canonical copy; the local `~/private/certificates/` is just for the next import after a future re-install.
 
 ---
 
