@@ -1,26 +1,26 @@
 # SETUP.md — Full recovery guide for David's ASUS laptop
 
-> **Audience.** This document is written for an AI agent (Claude Code or equivalent) working *alongside* the human owner. The agent should treat every numbered step as a checkpoint: read it, confirm prerequisites, execute, and **stop for the human** whenever the step contains the word **CONFIRM**. The human is the only party allowed to type passwords, plug USB sticks, accept BIOS prompts, or do anything destructive without an explicit OK.
+> **Audience and who does what.** §0–§8 are **human-driven** — Claude Code is not installed yet, so the human follows them by hand on the live Arch ISO using `nano` for any file edits. Starting at **§9 (user creation)** the human installs Claude Code so the agent can pick up §10 onward. Every step marked **CONFIRM** requires explicit human approval regardless.
 >
-> **Starting assumption.** The laptop has just come back from ASUS service. The internal NVMe disk has been **fully wiped** (a clean factory image of Windows 11 may or may not be present — assume nothing). The dual-boot configuration, the Arch Linux install, all user data on `/` and on the Windows partition is gone. Recovery codes, GPG keys and SSH keys live on the **off-device backup** the user prepared before sending the laptop (see [§0 Pre-service backup](#0--pre-service-backup-reference)).
+> **Starting assumption.** The laptop is back from ASUS. The human's plan: **wipe the entire disk** (even if a factory Windows image is present) and reinstall both OSes from scratch. The dual-boot, the old Arch install, and all user data on the Windows partition are gone. Recovery codes, GPG keys, SSH keys, certificates, and `~/.claude/` all live on the **USB pendrive** the human prepared before shipping (see [§0](#0--pre-service-backup-reference)).
 >
-> **Reference machine.** ASUS Zenbook (hostname `AZBOOK14`), Intel CPU + NVIDIA hybrid GPU, single NVMe disk, UEFI firmware, Secure Boot **disabled**.
+> **Reference machine.** ASUS Zenbook (hostname `AZBOOK14`), Intel CPU + NVIDIA hybrid GPU, **single 953.9 GiB Samsung NVMe** (`/dev/nvme0n1`), UEFI firmware, Secure Boot **disabled**.
 
 ---
 
 ## Table of contents
 
 0. [Pre-service backup (reference)](#0--pre-service-backup-reference)
-1. [Post-service: first boot of the returned laptop](#1--post-service-first-boot-of-the-returned-laptop)
-2. [Install / repair Windows 11 and shrink its partition](#2--install--repair-windows-11-and-shrink-its-partition)
-3. [Boot the Arch installation media](#3--boot-the-arch-installation-media)
-4. [Partition the disk](#4--partition-the-disk)
-5. [Format and mount](#5--format-and-mount)
-6. [`pacstrap` base system](#6--pacstrap-base-system)
-7. [Configure the new system (`arch-chroot`)](#7--configure-the-new-system-arch-chroot)
-8. [Install and configure `systemd-boot` (dual boot)](#8--install-and-configure-systemd-boot-dual-boot)
-9. [First reboot into Arch and create the user](#9--first-reboot-into-arch-and-create-the-user)
-10. [Networking, AUR helper, dotfiles](#10--networking-aur-helper-dotfiles)
+1. [From the returned Windows: prepare two install USBs](#1--from-the-returned-windows-prepare-two-install-usbs-human-driven) — *human*
+2. [Wipe the disk and clean-install Windows on 440 GiB](#2--wipe-the-disk-and-clean-install-windows-on-440-gib-human-driven) — *human*
+3. [Boot the Arch ISO](#3--boot-the-arch-iso-human-driven-still-no-claude-code) — *human*
+4. [Partition the disk](#4--partition-the-disk-human-driven) — *human*
+5. [Format and mount](#5--format-and-mount-human-driven) — *human*
+6. [`pacstrap` base system](#6--pacstrap-base-system) — *human*
+7. [Configure the new system inside `arch-chroot`](#7--configure-the-new-system-inside-arch-chroot-human-driven-no-agent-yet) — *human*
+8. [Install and configure `systemd-boot`](#8--install-and-configure-systemd-boot-human-driven) — *human*
+9. [First reboot, create user, install Claude Code](#9--first-reboot-into-arch-create-the-user-install-claude-code-human-driven-hand-off) — *human → agent hand-off*
+10. [Clone dotfiles, install `yay`](#10--clone-dotfiles-install-yay-agent-driven-from-here-on) — *agent*
 11. [Restore packages from `.installed_programs`](#11--restore-packages-from-installed_programs)
 12. [Symlink configs from the dotfiles repo](#12--symlink-configs-from-the-dotfiles-repo)
 13. [System-wide configs (NVIDIA, ASUS, X11, SDDM, services)](#13--system-wide-configs-nvidia-asus-x11-sddm-services)
@@ -34,78 +34,88 @@
 
 ## 0 — Pre-service backup (reference)
 
-This section documents what **must already exist on an external drive or trusted host** before the laptop is handed to ASUS. Re-check this list with the human before assuming anything.
+This section documents what **must already be on the USB pendrive** before the laptop is handed to ASUS. Re-check this list with the human before assuming anything. Throughout the rest of the guide, `<USB>` means the mount point of that pendrive (e.g. `/run/media/david/MYUSB`).
 
-The off-device backup should contain:
+The pendrive backup should contain:
 
 - `~/.ssh/` (full directory: `id_rsa`, `id_rsa.pub`, `config`, `known_hosts`).
 - `~/.gnupg/` (full directory — contains GPG private keys for git signing / decryption).
 - `~/.secrets` (small file, ~1 KB, contains plaintext secrets used by shell scripts).
-- `~/.gitconfig` (top-level `[user]` block — the rest is re-created from this repo).
-- `~/.config/gh/hosts.yml` (GitHub CLI token; can also be re-generated with `gh auth login`).
 - **`~/private/`** — the single consolidated source-of-truth directory for sensitive files. Permissions `700`. Contains:
   - `private/certificates/` — `.p12` personal certificates (`certificado-salvi.p12`, `certificado-v2.p12`; `certificadoDavid.p12` on the Windows desktop is the same content as `certificado-v2.p12`, no separate backup needed).
   - `private/recovery-codes/` — 2FA / account recovery codes pulled off the Windows partition (currently `github.txt`). Add new ones here as services rotate their codes.
 
-  Back this whole tree up with one `rsync -a ~/private/ <external>/private/` — it's the simplest piece of the off-device backup.
-- **The entire `~/.claude/` directory**. This holds *everything* about Claude Code on this machine: installed skills, plugins, MCP server configs (`~/.claude/settings.json`, `~/.claude/settings.local.json`), all project sessions and transcripts (`~/.claude/projects/*/sessions/*.jsonl`), the file-based memory system (`~/.claude/projects/-home-david-github-dotfiles/memory/*.md` and equivalents for every other project), keybindings, hooks, and the credentials/token cache. **None of it lives in the cloud.** A single `rsync -a ~/.claude/ <external>/claude-backup/` (or `tar`) is enough.
+  Back this whole tree up with one `rsync -a ~/private/ <USB>/private/` — the simplest piece of the pendrive backup.
+- **The entire `~/.claude/` directory**. This holds *everything* about Claude Code on this machine: installed skills, plugins, MCP server configs (`~/.claude/settings.json`, `~/.claude/settings.local.json`), all project sessions and transcripts (`~/.claude/projects/*/sessions/*.jsonl`), the file-based memory system, keybindings, hooks, and the credentials/token cache. **None of it lives in the cloud.** A single `rsync -a ~/.claude/ <USB>/claude-backup/` (or `tar`) is enough.
 - Browser export: bookmarks + saved passwords from Chrome, Brave, Firefox, Vivaldi, Edge, Opera. Easiest path: ensure each browser is signed in to its sync account *before* sending the laptop, and **screenshot the list of installed extensions** for verification.
-- 2FA seeds: if any TOTP is *only* on this laptop (not on the phone authenticator), export the seeds first. The mobile authenticator is the source of truth — if all 2FA already lives there, nothing extra to do.
+- 2FA seeds: if any TOTP is *only* on this laptop (not on the phone authenticator), export the seeds first.
 - `~/.config/gtheme/` and `~/.gtheme/` if any custom theme/desktop files were authored locally and not pushed.
-- Uncommitted work in every clone under `~/github/*` — at time of writing the dirty ones were `archy`, `car-finder`, `gtheme`. Run `for d in ~/github/*/; do (cd "$d" && git status -s); done` to confirm what's dirty *before* the laptop leaves.
-- The Windows partition at `/mnt`: at minimum `C:\Users\david\Desktop\certificadoDavid.p12`, `C:\Users\david\Documents\github-recovery-codes.txt`, `C:\Users\david\Documents\My Games`, plus anything in `OneDrive` that isn't actually synced (verify with the OneDrive web UI).
-- A note of the **laptop owner email** used in `.gitconfig`: `davidrbacelar@gmail.com`.
+- Uncommitted work in every clone under `~/github/*` — run `for d in ~/github/*/; do (cd "$d" && git status -s); done` and resolve every dirty repo *before* the laptop leaves.
+- The Windows partition at `/mnt`: anything in `OneDrive` that isn't actually synced (verify with the OneDrive web UI), plus anything under `C:\Users\david\{Music,Videos,Documents,Desktop}` that isn't already in `~/private/`.
 
-> **CONFIRM with the human** that the off-device backup is present and verified *before* doing any of the destructive steps in §3–§8. If anything is missing, stop.
+`~/.gitconfig`, `~/.config/gh/hosts.yml`, and any other reproducible config are **not** on the pendrive — the dotfiles repo already has `.gitconfig`, and `gh auth login` regenerates the token in §14.
 
----
-
-## 1 — Post-service: first boot of the returned laptop
-
-1. Plug in the charger. Open the lid. Power on with the power button.
-2. If the laptop boots straight into the ASUS factory Windows out-of-box experience, follow the OOBE only as far as creating a **local** Windows account named `david`. Skip the Microsoft account screen (`Shift+F10` → `oobe\BypassNRO.cmd` historically; on Windows 11 24H2+ run `start ms-cxh:localonly` from the same console). Disable every telemetry checkbox.
-3. If instead the disk is completely empty (no Windows present), skip ahead to [§2.B (clean Windows install)](#2b--clean-install-of-windows-11) below.
-4. Once at the Windows desktop, **CONFIRM with the human** that the off-device backup is still around — Windows-only steps are reversible up to this point but Arch installation (§3+) is not.
+> **CONFIRM with the human** that the pendrive backup is present and verified *before* doing any of the destructive steps in §2 onward. If anything is missing, stop.
 
 ---
 
-## 2 — Install / repair Windows 11 and shrink its partition
+## 1 — From the returned Windows: prepare two install USBs (human-driven)
 
-### 2.A  If Windows is already present (recovery image restored)
+> Even if ASUS reinstalled Windows for you, the plan is to **wipe everything**. We still boot into the factory Windows once just to use it as a "build machine" for both install USBs. After this section the disk gets nuked.
 
-1. Boot into Windows. Open Settings → Update & Security → run all Windows Updates and ASUS firmware updates (MyASUS app). Reboot until clean.
-2. Disable Fast Startup, otherwise `ntfs-3g` cannot mount the NTFS partition read-write from Arch:
-   - Control Panel → Power Options → "Choose what the power buttons do" → "Change settings that are currently unavailable" → uncheck **Turn on fast startup**.
-3. Disable Hibernation entirely:
-   - Open an elevated PowerShell: `powercfg /h off`.
-4. **Shrink the Windows partition** to free space for Arch. Open `diskmgmt.msc`, right-click the `C:` partition → *Shrink Volume…* Aim for **~256 GiB free** at the end of the disk for `/` plus a small `swap`. Larger if the user wants more room — current install uses ~73 % of a 350 GiB ext4. If shrink is limited by immovable files, run a defrag and disable the page file/hibernation temporarily, then re-shrink. Arch Wiki: <https://wiki.archlinux.org/title/Dual_boot_with_Windows#Windows_before_Linux>.
-5. Power off cleanly: `Shift + Click Restart` is fine; never just hold the power button.
+You will need **two USB sticks ≥ 8 GB** — one for the Windows installer, one for the Arch installer.
 
-### 2.B  Clean install of Windows 11 (if no Windows present)
-
-Reference: <https://wiki.archlinux.org/title/Dual_boot_with_Windows#Install_Windows>.
-
-1. From another machine, build a Windows 11 install USB with the [official Microsoft Media Creation Tool](https://www.microsoft.com/software-download/windows11). Use a USB ≥ 8 GB.
-2. Boot the laptop with `F2` to enter BIOS. Verify: Secure Boot **Disabled**, Fast Boot **Disabled**, TPM **Enabled**, SATA/NVMe mode **AHCI** (not RAID/Intel RST — Linux cannot see the disk in RST mode).
-3. Boot from the Windows USB (`Esc` boot menu).
-4. On the partitioning screen, **delete every existing partition** and let the Windows installer create its own scheme — it will lay down: ESP (vfat, ~100 MB), MSR, the main NTFS partition, and a small recovery NTFS at the end.
-5. **Crucial**: tell the installer to put the C: partition at **~half the disk** rather than filling all space. Easiest way: create a *custom-sized* partition equal to roughly 50 % of the disk; the remaining unallocated space will host Arch. If the installer doesn't let you size it directly, install Windows on the whole disk and shrink afterwards via §2.A step 4.
-6. Complete OOBE as in §1 step 2. Then continue with §2.A steps 2–5.
-
-> **CONFIRM with the human** before powering off: the unallocated free space at the end of the disk is *at least* 256 GiB.
+1. Plug in the charger, power on, sign in. Skip the Microsoft-account prompt with `Shift+F10` → `start ms-cxh:localonly` (Windows 11 24H2+) or `oobe\BypassNRO.cmd` (older). A local account named `david` is fine — it's about to be wiped anyway.
+2. **Verify the pendrive backup is intact.** Plug it in, open `\private\`, `\claude-backup\`, etc., and spot-check that the files from §0 are there. If anything is missing, stop and re-do §0 before continuing.
+3. **Build the Arch installer USB.** Open a browser, download the latest ISO and signature from <https://archlinux.org/download/> (pick a mirror physically close to you). Run [Rufus](https://rufus.ie/) (or the [balenaEtcher](https://etcher.balena.io/) shortcut already on the desktop). Select USB stick 1, pick the Arch ISO, choose **GPT / UEFI**, write in **DD image** mode when prompted. ~5 minutes.
+4. **Build the Windows 11 installer USB.** Run the [official Media Creation Tool](https://www.microsoft.com/software-download/windows11) on USB stick 2. Pick "Create installation media".
+5. (Optional but recommended) Run any pending Windows Updates + the MyASUS app's firmware updates — this leaves you on the latest UEFI/BIOS firmware before reinstalling.
+6. Shut down cleanly.
 
 ---
 
-## 3 — Boot the Arch installation media
+## 2 — Wipe the disk and clean-install Windows on 440 GiB (human-driven)
 
-1. On another machine, download the latest Arch ISO and verify the signature: <https://archlinux.org/download/>. Write it to a USB with `dd if=archlinux-…iso of=/dev/sdX bs=4M status=progress conv=fsync` (replace `sdX` — get it wrong and you destroy a different drive).
-2. Plug the USB in, power on the laptop, press `Esc` (boot menu key for this ASUS) and pick the USB.
-3. At the GRUB-ish boot menu, choose **Arch Linux install medium (x86_64, UEFI)**. You land in a root shell on the live ISO.
-4. Verify you are in UEFI mode: `ls /sys/firmware/efi/efivars` should list files (Arch Wiki: <https://wiki.archlinux.org/title/Installation_guide#Verify_the_boot_mode>).
-5. Connect to Wi-Fi with `iwctl`:
-   ```bash
+> **DESTRUCTIVE.** From here on the disk gets wiped. Confirm one more time that the pendrive backup is somewhere safe and *not plugged into this laptop*.
+
+1. Power on with the power button. Tap `F2` repeatedly to enter the BIOS setup. Verify:
+   - Secure Boot: **Disabled**
+   - Fast Boot: **Disabled**
+   - TPM: **Enabled** (Windows 11 requires it)
+   - SATA / NVMe mode: **AHCI** (not RAID / Intel RST — Linux can't see the disk under RST).
+2. Save & reboot. Tap `Esc` for the one-shot boot menu. Pick the **Windows 11 installer USB** (USB stick 2).
+3. At the Windows installer "Where do you want to install Windows?" screen:
+   - **Delete every existing partition** on `Drive 0` — including the ASUS recovery and MyASUS partitions. You want the disk to read as one big block of `Unallocated space`.
+   - Click **New**, type **`450560`** in the Size field (that's **440 GiB**, leaving the rest unallocated for Arch). Click **Apply**.
+   - Windows will create four partitions for itself: **EFI System (~100 MiB)**, **MSR (16 MiB)**, the new **Primary (~440 GiB)**, and a **Recovery (~620 MiB)** at the end.
+   - Select the Primary partition, click **Next**, let the install run. The laptop reboots a few times.
+4. Finish OOBE: same `start ms-cxh:localonly` trick, local account `david`, decline every telemetry checkbox.
+5. Once on the desktop, **disable Fast Startup**: Control Panel → Power Options → "Choose what the power buttons do" → "Change settings that are currently unavailable" → uncheck *Turn on fast startup*. (If Fast Startup is on, `ntfs-3g` can't safely mount `/mnt` from Arch.)
+6. **Disable hibernation**: open *Terminal (Admin)* and run `powercfg /h off`.
+7. Verify the post-install partition layout in `diskmgmt.msc`. You should see:
+
+   | # | Type | Size | Notes |
+   |---|---|---|---|
+   | 1 | EFI System Partition (FAT32) | ~100 MiB | Windows ESP — leave alone |
+   | 2 | Microsoft Reserved | 16 MiB | MSR — leave alone |
+   | 3 | Primary (NTFS, C:) | ~440 GiB | Windows install |
+   | 4 | Recovery (NTFS) | ~620 MiB | WinRE — leave alone |
+   | — | **Unallocated** | **~513 GiB** | Arch goes here |
+
+8. Reboot. Tap `Esc` again, pick the **Arch installer USB** (USB stick 1).
+
+Arch Wiki on dual-booting: <https://wiki.archlinux.org/title/Dual_boot_with_Windows#Install_Windows>.
+
+---
+
+## 3 — Boot the Arch ISO (human-driven, still no Claude Code)
+
+1. At the Arch ISO boot menu, choose **Arch Linux install medium (x86_64, UEFI)**. You land in a root shell on the live ISO.
+2. Verify UEFI: `ls /sys/firmware/efi/efivars` — should list files. (Arch Wiki: <https://wiki.archlinux.org/title/Installation_guide#Verify_the_boot_mode>.)
+3. Connect to Wi-Fi with `iwctl`:
+   ```text
    iwctl
-   [iwd]# device list                 # note the device name, e.g. wlan0
+   [iwd]# device list                  # note the device name, e.g. wlan0
    [iwd]# station wlan0 scan
    [iwd]# station wlan0 get-networks
    [iwd]# station wlan0 connect <SSID>
@@ -113,52 +123,68 @@ Reference: <https://wiki.archlinux.org/title/Dual_boot_with_Windows#Install_Wind
    ping -c 3 archlinux.org
    ```
    Arch Wiki: <https://wiki.archlinux.org/title/Iwd#iwctl>.
-6. Update the system clock: `timedatectl set-ntp true`.
+4. Update the system clock: `timedatectl set-ntp true`.
 
 ---
 
-## 4 — Partition the disk
+## 4 — Partition the disk (human-driven)
 
-> **DESTRUCTIVE.** From here on, mistakes wipe data. **CONFIRM** the disk identity and the off-device backup with the human before each `mklabel`, `mkpart`, or `mkfs` command.
+> **DESTRUCTIVE.** Run each command deliberately. If any value looks off, stop and read it again.
 
-1. Identify the disk: `lsblk -f`. It should be `/dev/nvme0n1`. Confirm the existing Windows ESP (vfat, ~100 MB), MSR, Windows C: (NTFS, large), and unallocated space at the end.
+Target final layout on the 953.9 GiB disk:
+
+| # | Label | Type | Size (MiB) | Cumulative end | Purpose |
+|---|---|---|---|---|---|
+| 1 | `EFI System` | FAT32 | ~100 | ~100 | Windows ESP (created in §2) |
+| 2 | `MSR` | — | 16 | ~116 | Microsoft Reserved (created in §2) |
+| 3 | `Basic Data` | NTFS | 450 560 | ~450 676 | Windows C: (created in §2) |
+| 4 | `Recovery` | NTFS | ~620 | ~451 296 | WinRE (created in §2) |
+| 5 | `ARCH_ESP` | FAT32 | **1024** | ~452 320 | Arch /boot — new, big enough for systemd-boot + kernel + initramfs |
+| 6 | `ARCH_SWAP` | linux-swap | **8192** | ~460 512 | 8 GiB swap |
+| 7 | `ARCH_ROOT` | ext4 | **rest** (~516 GiB) | end of disk | Arch / |
+
+1. Identify the disk: `lsblk -f`. It should be `/dev/nvme0n1`. You will see partitions 1–4 from the Windows install and free space after partition 4.
 2. Open `parted`:
-   ```bash
+   ```text
    parted /dev/nvme0n1
    (parted) unit MiB
-   (parted) print
+   (parted) print free
    ```
-   Note the **end** of the last Windows partition (call it `WIN_END`) and the **end of the disk** (call it `DISK_END`).
-3. Inside the free space, create three new partitions in this order (numbering will continue from whatever Windows used):
-   - **`/boot`** — vfat, 1024 MiB, type `EFI System Partition` *(keep the Windows ESP intact — Arch gets its own, much larger ESP so kernel + initramfs fit comfortably and `systemd-boot` can be installed there. Arch Wiki: <https://wiki.archlinux.org/title/EFI_system_partition#Typical_mount_points>)*.
-   - **`swap`** — 16 GiB (matches current install: 16 GiB swap partition).
-   - **`/`** — ext4, fill the rest.
+   The output will list `partition 4` ending around `451296 MiB` and a `Free Space` row showing the unallocated region. Note the **start** of that free space (call it `START`, ≈ `451296`) and the **end of the disk** (call it `END`, ≈ `953869`).
+3. Create the three Arch partitions inside the free space:
    ```text
-   (parted) mkpart "ARCH_ESP"   fat32  WIN_END         WIN_END+1024
-   (parted) set    <N>          esp on
-   (parted) mkpart "ARCH_SWAP"  linux-swap WIN_END+1024  WIN_END+1024+16384
-   (parted) mkpart "ARCH_ROOT"  ext4   WIN_END+1024+16384  DISK_END
+   (parted) mkpart ARCH_ESP   fat32       START          START+1024
+   (parted) set    5  esp on
+   (parted) mkpart ARCH_SWAP  linux-swap  START+1024     START+1024+8192
+   (parted) mkpart ARCH_ROOT  ext4        START+1024+8192   END
    (parted) print
    (parted) quit
    ```
-4. Re-run `lsblk -f` — you should see two more `nvme0n1pX` partitions for `/boot` and `/` plus a swap.
+   Plug in the actual numbers — e.g. with `START=451296`:
+   ```text
+   (parted) mkpart ARCH_ESP   fat32       451296   452320
+   (parted) set    5  esp on
+   (parted) mkpart ARCH_SWAP  linux-swap  452320   460512
+   (parted) mkpart ARCH_ROOT  ext4        460512   953869
+   ```
+4. Re-run `lsblk -f` — you should now see `nvme0n1p5` (ARCH_ESP), `nvme0n1p6` (ARCH_SWAP), `nvme0n1p7` (ARCH_ROOT).
 
-> **CONFIRM** the new partition numbers with the human. They are needed verbatim in §5.
+> **CONFIRM** the new partition numbers. They feed §5 verbatim.
 
 ---
 
-## 5 — Format and mount
+## 5 — Format and mount (human-driven)
 
-Substitute the partition numbers from §4 step 4. Below assumes the *new* Arch ESP is `nvme0n1pA`, swap is `nvme0n1pB`, root is `nvme0n1pC`.
+Assuming the §4 layout (`p5` = Arch ESP, `p6` = swap, `p7` = root):
 
 ```bash
-mkfs.fat -F32 -n ARCH_ESP /dev/nvme0n1pA
-mkswap                    /dev/nvme0n1pB
-mkfs.ext4                 /dev/nvme0n1pC
+mkfs.fat -F32 -n ARCH_ESP /dev/nvme0n1p5
+mkswap                    /dev/nvme0n1p6
+mkfs.ext4                 /dev/nvme0n1p7
 
-mount /dev/nvme0n1pC /mnt
-mount --mkdir /dev/nvme0n1pA /mnt/boot
-swapon /dev/nvme0n1pB
+mount /dev/nvme0n1p7 /mnt
+mount --mkdir /dev/nvme0n1p5 /mnt/boot
+swapon /dev/nvme0n1p6
 ```
 
 Arch Wiki: <https://wiki.archlinux.org/title/Installation_guide#Format_the_partitions>.
@@ -184,7 +210,9 @@ cat /mnt/etc/fstab    # sanity check
 
 ---
 
-## 7 — Configure the new system (`arch-chroot`)
+## 7 — Configure the new system inside `arch-chroot` (human-driven, no agent yet)
+
+> All file edits below use `nano <path>` to keep things simple for a human typing into the live ISO. Save with `Ctrl+O` `Enter`, exit with `Ctrl+X`.
 
 ```bash
 arch-chroot /mnt
@@ -193,39 +221,70 @@ arch-chroot /mnt
 Inside the chroot:
 
 ```bash
-# Time zone
 ln -sf /usr/share/zoneinfo/Europe/Madrid /etc/localtime
 hwclock --systohc
+```
 
-# Locale — must match the live system exactly
-sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+### Locale
+
+```bash
+nano /etc/locale.gen
+```
+
+Find the line `#en_US.UTF-8 UTF-8`, remove the leading `#`, save & exit. Then:
+
+```bash
 locale-gen
 echo 'LANG=en_US.UTF-8' > /etc/locale.conf
+```
 
-# Console keymap (intentionally left blank — Wayland session uses altgr-intl, not the console keymap)
+### Console keymap
 
-# Hostname (matches the previous install)
+Intentionally left unset — the Wayland session uses `altgr-intl` directly, not the console keymap. Nothing to do.
+
+### Hostname
+
+```bash
 echo 'AZBOOK14' > /etc/hostname
-cat >>/etc/hosts <<'EOF'
+nano /etc/hosts
+```
+
+Append these three lines (nothing else; the file may be empty in a fresh install):
+
+```
 127.0.0.1    localhost
 ::1          localhost
 127.0.1.1    AZBOOK14.localdomain    AZBOOK14
-EOF
+```
 
-# Root password
+### Root password
+
+```bash
 passwd
 ```
 
 Arch Wiki: <https://wiki.archlinux.org/title/Installation_guide#Configure_the_system>.
 
-### initramfs
-
-The system uses early-KMS for NVIDIA. Replace `/etc/mkinitcpio.conf` MODULES line and rebuild:
+### initramfs (NVIDIA early-KMS)
 
 ```bash
-sed -i 's|^MODULES=.*|MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)|' /etc/mkinitcpio.conf
-# Verify HOOKS line (defaults are fine; reference value below):
-# HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)
+nano /etc/mkinitcpio.conf
+```
+
+Find the line starting with `MODULES=` and replace it with this (keep the parentheses, no trailing comment):
+
+```
+MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
+```
+
+Leave `HOOKS=` at its default (reference value, for sanity check only):
+```
+HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)
+```
+
+Save, exit, then rebuild:
+
+```bash
 mkinitcpio -P
 ```
 
@@ -233,7 +292,7 @@ mkinitcpio -P
 
 ---
 
-## 8 — Install and configure `systemd-boot` (dual boot)
+## 8 — Install and configure `systemd-boot` (human-driven)
 
 Reference: <https://wiki.archlinux.org/title/Systemd-boot#Installation>.
 
@@ -243,96 +302,125 @@ bootctl install
 
 This places `systemd-bootx64.efi` at `/boot/EFI/systemd/` and a fallback at `/boot/EFI/BOOT/BOOTX64.EFI`, and registers a `Linux Boot Manager` entry in NVRAM.
 
-Write the loader config (matches the previous install exactly — see `boot/loader.conf` in this repo):
+### Loader config
 
 ```bash
-cat > /boot/loader/loader.conf <<'EOF'
+nano /boot/loader/loader.conf
+```
+
+Replace whatever's in the file (it may have placeholder comments) with exactly these three lines:
+
+```
 default arch.conf
 timeout 5
 console-mode max
-EOF
 ```
 
-Write the Arch entry. **Replace `<ROOT_UUID>` with the UUID of the Arch root partition** (`blkid /dev/nvme0n1pC` — copy the `UUID=` value):
+### Arch entry
+
+First, get the root partition UUID and **write it down** — you'll type it into the next file:
 
 ```bash
-cat > /boot/loader/entries/arch.conf <<EOF
+blkid /dev/nvme0n1p7
+```
+
+Copy the value after `UUID=` (a long hyphenated string). Then:
+
+```bash
+nano /boot/loader/entries/arch.conf
+```
+
+File contents — **replace `<ROOT_UUID>` with the UUID you just copied** (everything else verbatim):
+
+```
 title Arch Linux
 linux /vmlinuz-linux
 initrd /intel-ucode.img
 initrd /initramfs-linux.img
 options root=UUID=<ROOT_UUID>
-EOF
 ```
 
-### Windows entry (the "EFI shell" trick)
+### Windows entry
 
-The original install boots Windows via a tiny EFI shell script. Reference file: `boot/entries/windows.conf` in this repo. To replicate it you need two extra files on the Arch ESP:
+We'll do the **direct chainload** of `bootmgfw.efi` — it's the shorter, simpler method. It assumes the Windows ESP keeps `bootmgfw.efi` at the standard `/EFI/Microsoft/Boot/` path, which is the default Windows installer layout.
 
-1. The UEFI Shell binary at `/boot/tools/shellx64.efi`. Install via `pacman -S edk2-shell` (added in §11) and then `cp /usr/share/edk2-shell/x64/Shell.efi /boot/tools/shellx64.efi`.
-2. A NSH script at `/boot/windows.nsh` that chainloads the Windows boot manager. Minimal content (let the shell autodetect the FS volume number):
-   ```nsh
-   @echo -off
-   for %v in 0 1 2 3 4 5 6 7 8 9 A B C D E F
-       if exist FS%v:\EFI\Microsoft\Boot\bootmgfw.efi then
-           FS%v:\EFI\Microsoft\Boot\bootmgfw.efi
-       endif
-   endfor
-   echo "Windows boot manager not found."
-   ```
-3. Write the entry:
-   ```bash
-   cat > /boot/loader/entries/windows.conf <<'EOF'
-   title Windows 11
-   efi /tools/shellx64.efi
-   options -nointerrupt -noconsolein -noconsoleout windows.nsh
-   EOF
-   ```
+Mount the Windows ESP read-only and copy the Windows boot manager into Arch's ESP so `systemd-boot` can chainload it:
 
-   *Simpler alternative the agent should propose to the human*: skip the shell entirely and chainload Windows directly. Requires mounting the Windows ESP and copying `bootmgfw.efi`. The Arch Wiki "Boot loaders / systemd-boot / Windows" section documents both methods: <https://wiki.archlinux.org/title/Dual_boot_with_Windows#Configuring_the_bootloader>.
+```bash
+mkdir -p /mnt/winefi
+mount -o ro /dev/nvme0n1p1 /mnt/winefi
+mkdir -p /boot/EFI/Microsoft
+cp -r /mnt/winefi/EFI/Microsoft/Boot /boot/EFI/Microsoft/Boot
+umount /mnt/winefi && rmdir /mnt/winefi
+```
 
-> **CONFIRM with the human** which Windows-entry method to use. The shell-script trick is what was working before; the direct-chainload is shorter but assumes the Windows ESP path stays at `/EFI/Microsoft/Boot/bootmgfw.efi`.
+Then:
 
-### Hostname/services that need to be enabled in chroot
+```bash
+nano /boot/loader/entries/windows.conf
+```
+
+Contents (verbatim):
+
+```
+title Windows 11
+efi /EFI/Microsoft/Boot/bootmgfw.efi
+```
+
+> **Why not the EFI-shell trick from the previous install?** That method (a `shellx64.efi` + `windows.nsh` script that autodetects the FS volume) survives Windows ESP-path changes, but it requires `edk2-shell` (only available *after* §11). The direct chainload above works immediately, fits the "human-driven, no agent yet" constraint, and is the method the [Arch Wiki Systemd-boot Windows section](https://wiki.archlinux.org/title/Dual_boot_with_Windows#Configuring_the_bootloader) documents first. If Windows ever changes its ESP layout and the chainload breaks, fall back to the shell-script method described in `boot/entries/windows.conf` of this repo.
+
+### Enable NetworkManager (still in chroot)
 
 ```bash
 systemctl enable NetworkManager.service
 ```
 
-Exit the chroot and reboot:
+### Leave chroot and reboot
 
 ```bash
 exit            # leave arch-chroot
 umount -R /mnt
 swapoff -a
-reboot          # remove the USB during POST
+reboot          # pull the Arch installer USB during POST
 ```
 
 ---
 
-## 9 — First reboot into Arch and create the user
+## 9 — First reboot into Arch, create the user, install Claude Code (human-driven hand-off)
 
-1. The systemd-boot menu should now offer **Arch Linux** (default) and **Windows 11**. Boot Arch.
-2. Log in as `root`.
+1. The systemd-boot menu should now offer **Arch Linux** (default) and **Windows 11**. Test both: boot Windows once to confirm the chainload works, then reboot back into Arch.
+2. Log in to Arch as `root`.
 3. Create the user (UID 1000, default shell `zsh`, primary group `david`):
    ```bash
    useradd -m -G wheel,video,audio,storage,input,network -s /bin/zsh david
    passwd david
-   EDITOR=nano visudo    # uncomment %wheel ALL=(ALL:ALL) ALL
+   EDITOR=nano visudo    # uncomment "%wheel ALL=(ALL:ALL) ALL"
    ```
-4. Reboot, log in as `david` on tty1.
+4. Log out, log back in as `david` on tty1.
+5. Get on the network and install Node.js + Claude Code so the agent can take over from §10:
+   ```bash
+   sudo nmcli device wifi connect <SSID> password <PASS>
+   sudo pacman -Syu
+   sudo pacman -S --needed nodejs npm git
+   sudo npm install -g @anthropic-ai/claude-code
+   claude --version          # sanity check
+   ```
+6. **Hand-off point.** Launch Claude Code in a working directory and let it drive §10 onward:
+   ```bash
+   mkdir -p ~/github && cd ~/github
+   claude
+   # in Claude Code, paste:  "Continue from §10 of ~/github/dotfiles/SETUP.md once
+   #                          you've cloned the repo. Stop at every CONFIRM step."
+   ```
+   The agent will need to run `claude auth login` on first launch (interactive OAuth in the terminal — only the human can complete it).
 
 ---
 
-## 10 — Networking, AUR helper, dotfiles
+## 10 — Clone dotfiles, install `yay` (agent-driven from here on)
 
 ```bash
-nmcli device wifi connect <SSID> password <PASS>   # human types
-sudo pacman -Syu
-
-# git via SSH won't work yet (no SSH key) — clone over HTTPS for now,
-# we will switch the remote to SSH after §14 + §15.
-mkdir -p ~/github && cd ~/github
+# Cloned over HTTPS for now (no SSH key yet — we restore that in §14).
+cd ~/github
 git clone https://github.com/daavidrgz/dotfiles.git
 cd dotfiles
 
