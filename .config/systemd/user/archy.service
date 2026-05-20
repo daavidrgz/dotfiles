@@ -1,0 +1,16 @@
+[Unit]
+Description=Archy — your Arch Linux voice pet
+Documentation=https://github.com/davidrodz/archy
+After=sound.target
+
+[Service]
+Type=simple
+ExecStart=/home/david/.local/bin/archyd
+Restart=on-failure
+RestartSec=2
+# Quiet down systemd's stdout/err capture — archyd already logs to $XDG_RUNTIME_DIR/archy/archy.log.
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

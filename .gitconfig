@@ -5,3 +5,13 @@
     path = ~/work/.gitconfig
 [push]
 	autoSetupRemote = true
+[diff]
+	tool = difftastic
+[difftool "difftastic"]
+	cmd = difft "$LOCAL" "$REMOTE"
+[difftool]
+	prompt = false
+[pager]
+	difftool = true
+[alias]
+	d = -c diff.external=difft diff

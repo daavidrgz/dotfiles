@@ -1,0 +1,24 @@
+function mobile() {
+	supergfxctl -m Hybrid
+	reboot
+}
+
+function desktop() {
+	supergfxctl -m AsusMuxDgpu
+	reboot
+}
+
+function help() {
+	echo -e "${Y}Usage:${W} asusreboot [options]"
+	echo -e "${Y}Options:${W}"
+	echo -e "  ${G}mobile, -m${W}  Reboot the system to use the mobile configuration"
+	echo -e "  ${G}desktop, -d${W} Reboot the system to use the desktop configuration"
+	echo -e "  ${G}help, -h${W}    Show this help"
+}
+
+case "$1" in
+"help" | "-h") help ;;
+"mobile" | "-m") mobile ;;
+"desktop" | "-d") desktop ;;
+*) help ;;
+esac

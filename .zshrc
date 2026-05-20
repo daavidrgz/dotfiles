@@ -44,6 +44,9 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 # Custom Scripts
 export PATH=$PATH:$HOME_DIR/scripts
 
+# Caelestia
+export CAELESTIA_RECORDINGS_DIR="$HOME/videos/recordings"
+
 # History
 HISTFILE=~/.zsh_history
 HISTSIZE=50000
@@ -83,12 +86,13 @@ alias ls='ls --color=auto'
 alias dir='dir --color=auto'
 alias vdir='vdir --color=auto'
 alias grep='grep --color=auto'
+alias df='duf'
 
 # Maven aliases
 alias mvnc='mvn compile assembly:single'
 
 # My aliases
-alias ll='LC_COLLATE=C ls -alhF --group-directories-first'
+# alias ll='LC_COLLATE=C ls -alhF --group-directories-first'
 alias tree='tree -C'
 alias cat='bat'
 alias catp='bat -p'
@@ -98,19 +102,19 @@ alias xokas='firefox twitch.tv/elxokas &>/dev/null &; disown %1'
 alias ttyc='tty-clock -c -s -b'
 alias purge='sudo pacman -Rns $(pacman -Qdtq)'
 alias bcat='/bin/cat'
-alias clip='xclip -selection clipboard'
+alias xclip='xclip -selection clipboard'
+alias clip='wl-copy'
 alias pdf='zathura --fork'
 alias dup='kitty . &; disown'
 alias f='fuck'
 alias du='du -d 1 -ha'
-alias ell='exa -laF --icons --group-directories-first'
+alias ll='exa -laF --icons --group-directories-first'
 alias unimatrix='unimatrix -s 96 -f -l o'
 alias r='yazi'
 alias ncm='ncmpcpp'
 alias c='code .'
 alias rg='rg --hidden --no-ignore'
 alias cpufetch='cpufetch --logo-intel-new'
-alias df='df -h'
 alias svgtopdf='inkscape --export-type=pdf'
 alias cleantex='rm *.aux *.fdb_latexmk *.fls *.synctex.gz *.log'
 
@@ -157,6 +161,9 @@ alias npd='npm run dev'
 alias gt='gtheme theme apply'
 alias gd='gtheme desktop apply'
 
+# Claude aliases
+alias claude='claude --dangerously-skip-permissions'
+
 # Work script
 [[ -r "$HOME_DIR/source-scripts/work.sh" ]] && source $HOME_DIR/source-scripts/work.sh
 
@@ -189,3 +196,13 @@ unset ZSH_AUTOSUGGEST_USE_ASYNC
 
 fpath=(/home/david/.gtheme/completions $fpath)
 autoload -Uz compinit && compinit -u -d $XDG_CACHE_HOME/zsh/.zcompdump
+
+# Private env vars (kept out of dotfiles repo)
+[ -r "$HOME/.secrets" ] && source "$HOME/.secrets"
+
+# Track last CWD so new kitty windows can resume there
+autoload -Uz add-zsh-hook
+_aula_save_last_cwd() { print -r -- "$PWD" >| "$XDG_CACHE_HOME/last_cwd" }
+add-zsh-hook chpwd _aula_save_last_cwd
+[ -f "$XDG_CACHE_HOME/last_cwd" ] || _aula_save_last_cwd
+

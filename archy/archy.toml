@@ -1,0 +1,26 @@
+# Archy configuration.
+
+agent_model = "claude-opus-4-7"
+
+[stt]
+language = "es"
+model    = "~/.local/share/whisper-models/ggml-large-v3-turbo.bin"
+binary   = "whisper-cli"
+
+[tts]
+language = "es"
+engine   = "kokoro"   # piper | kokoro
+
+# ─── Piper (local, fast, Spanish from Spain) ─────────────────────────────────
+# [tts.piper]
+# model  = "~/.local/share/piper-voices/es_ES-davefx-medium.onnx"
+# binary = "piper-tts"
+
+# ─── Kokoro (local ONNX, English by default) ─────────────────────────────────
+[tts.kokoro]
+python = "~/.local/share/kokoro/.venv/bin/python"
+model  = "~/.local/share/kokoro/kokoro-v1.0.onnx"
+voices = "~/.local/share/kokoro/voices-v1.0.bin"
+voice  = "em_alex"
+speed  = 1.2
+device = "cuda"

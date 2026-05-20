@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -e
+
+case "${1:-start}" in
+    start)
+        if ! systemctl is-active --quiet waydroid-container; then
+            echo "Starting waydroid-container..."
+            sudo systemctl start waydroid-container
+            sleep 2
+        fi
+
+        if ! waydroid status 2>/dev/null | grep -q "Session:.*RUNNING"; then
+            echo "Starting waydroid session..."
+            waydroid session start &
+            sleep 3
+        fi
+
+        waydroid show-full-ui
+        ;;
+    stop)
+        echo "Stopping waydroid session..."
+        waydroid session stop 2>/dev/null || true
+        echo "Stopping waydroid-container..."
+        sudo systemctl stop waydroid-container
+        ;;
+    status)
+        systemctl is-active waydroid-container && echo "container: running" || echo "container: stopped"
+        waydroid status 2>/dev/null || true
+        ;;
+    *)
+        echo "Usage: android [start|stop|status]"
+        exit 1
+        ;;
+esac

@@ -1,0 +1,11 @@
+bluetooth.service
+docker.service
+NetworkManager-dispatcher.service
+NetworkManager-wait-online.service
+NetworkManager.service
+sddm.service
+supergfxd.service
+systemd-timesyncd.service
+waydroid-docker-fix.service
+systemd-userdbd.socket
+remote-fs.target

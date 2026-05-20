@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Threshold for inactivity in milliseconds (e.g., 300000ms = 5 minutes)
+IDLE_THRESHOLD=20000
+
+# ID of the keyboard device (replace with your keyboard ID)
+KEYBOARD_ID=13
+
+# Keycode for the Windows key (replace with the correct keycode)
+WINDOWS_KEYCODE=133
+
+# Temporary file for storing the last active time
+LAST_ACTIVE_FILE="/tmp/last_active_time"
+
+IS_PRESSED_FILE="/tmp/is_pressed"
+
+# Function to monitor Windows key press
+monitor_windows_key() {
+    xinput test $KEYBOARD_ID | grep --line-buffered "$WINDOWS_KEYCODE" | while read -r line; do
+        if [[ $line == *press* ]]; then
+            # Change the state
+            echo 1 >"$IS_PRESSED_FILE"
+            # Show Polybar silently
+            polybar-msg cmd show >/dev/null 2>&1
+        else
+            # Change the state
+            echo 0 >"$IS_PRESSED_FILE"
+            # Update the last active time
+            echo $(date +%s%3N) >"$LAST_ACTIVE_FILE"
+        fi
+    done
+}
+
+# Start monitoring the Windows key in the background
+monitor_windows_key &
+
+# Initialize files
+echo $(date +%s%3N) >"$LAST_ACTIVE_FILE"
+echo "0" >"$IS_PRESSED_FILE"
+
+while true; do
+    CURRENT_TIME=$(date +%s%3N)
+    # Read the last active time from the file
+    LAST_ACTIVE=$(cat "$LAST_ACTIVE_FILE")
+    IDLE_TIME=$((CURRENT_TIME - LAST_ACTIVE))
+    IS_PRESSED=$(cat "$IS_PRESSED_FILE")
+
+    # Show/Hide Polybar based on idle time
+    if [[ "$IDLE_TIME" -gt "$IDLE_THRESHOLD" && "$IS_PRESSED" -eq 0 ]]; then
+        # Hide Polybar silently
+        polybar-msg cmd hide >/dev/null 2>&1
+    fi
+    # Check every 0.1 seconds
+    sleep 0.1
+done
