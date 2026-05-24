@@ -469,6 +469,12 @@ ln -snf $PWD/.gitconfig          ~/.gitconfig
 ln -snf $PWD/.xprofile           ~/.xprofile
 ln -snf $PWD/.installed_programs ~/.installed_programs
 
+# Top-level ~/.config/ files (not managed by gtheme).
+# chrome-flags.conf forces Chrome to always expose CDP on port 9222 with a
+# dedicated profile, so archy / the chrome-cdp skill can drive the browser
+# no matter how it's launched (rofi, terminal, .desktop, hyprctl exec…).
+ln -snf $PWD/.config/chrome-flags.conf ~/.config/chrome-flags.conf
+
 # Custom scripts
 mkdir -p ~/scripts
 for s in "$PWD"/scripts/*; do ln -snf "$s" ~/scripts/$(basename "$s"); done
