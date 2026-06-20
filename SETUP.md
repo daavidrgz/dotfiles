@@ -576,8 +576,11 @@ System-wide (from `services/services-system.txt`):
 ```bash
 sudo systemctl enable bluetooth.service docker.service NetworkManager.service \
                       sddm.service supergfxd.service systemd-timesyncd.service \
-                      waydroid-docker-fix.service
+                      waydroid-docker-fix.service \
+                      nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
 ```
+
+> **NVIDIA suspend/resume** — the three `nvidia-*` services above are **required** for a working resume on this hybrid laptop. The driver runs with `PreserveVideoMemoryAllocations=1`, so VRAM must be saved/restored across suspend by `nvidia-suspend`/`nvidia-resume`. If they are disabled, closing and reopening the lid resumes the kernel but leaves the GPU/compositor hung (lock screen flashes, then the display dies and only a hard power-off recovers). They ship **disabled** by default — enabling them is mandatory, not optional.
 
 User-level (from `services/services-user.txt`):
 
@@ -590,6 +593,7 @@ systemctl --user enable pipewire.socket pipewire-pulse.socket wireplumber.servic
 
 - `nvidia-open-dkms` was the kernel module flavour in use. With `linux-headers` installed, the DKMS module rebuilds automatically. Verify: `dkms status`.
 - `supergfxctl` handles GPU mode switching (Hybrid/Integrated/dGPU). The shipped `supergfxd.conf` already has `mode: Hybrid` and `hotplug_type: Asus`.
+- **Suspend/resume**: the `nvidia-suspend`/`nvidia-resume`/`nvidia-hibernate` services must be enabled (see "Services to enable" above) or resume from a lid-close hangs the GPU. They are disabled out of the box.
 - Wayland on hybrid NVIDIA: `nvidia_drm.modeset=1` is mandatory. It's set implicitly by adding `nvidia_drm` to `MODULES=` in `mkinitcpio.conf` *with* the `KMS` hook (already configured) — the modeset flag is the default in the open driver. Arch Wiki: <https://wiki.archlinux.org/title/NVIDIA#DRM_kernel_mode_setting>.
 
 ### ASUS-specific
