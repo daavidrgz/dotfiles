@@ -68,6 +68,7 @@ foreground = 'f8f8f2'
 
 ## Gotchas
 
+- ⚠️ **NEVER run `gtheme d apply` (desktop apply) to "verify" or "refresh" a change — it logs the user out and kills the entire running session (all open apps/windows are lost).** Only run it when the user explicitly asks to switch desktop AND has agreed to lose their session. To apply config edits, write them to the desktop source (`~/github/gtheme/desktops/<desktop>/.config/...`) — the deployed files in `~/.config/` already work live; reload the individual app instead (e.g. `pkill -SIGUSR2 waybar`). For theme/color changes use `gtheme t apply <theme>`, which does NOT log out.
 - Hex colors are stored **without** `#` — patterns add `#` or `0x` as needed.
 - After editing a theme TOML, re-apply with `gtheme t apply <name>` to regenerate pattern outputs.
 - Post-scripts in `gtheme/post-scripts/` must match pattern names and be executable.

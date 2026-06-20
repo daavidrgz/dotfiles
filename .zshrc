@@ -139,7 +139,6 @@ alias dcl='docker compose logs -f'
 
 # Cargo aliases
 alias cb='cargo build'
-alias cc='cargo check'
 alias cr='cargo run -q'
 alias ct='cargo test'
 
@@ -162,7 +161,8 @@ alias gt='gtheme theme apply'
 alias gd='gtheme desktop apply'
 
 # Claude aliases
-alias claude='claude --dangerously-skip-permissions'
+alias cc='claude --dangerously-skip-permissions'
+alias ccr='claude --dangerously-skip-permissions --resume'
 
 # Work script
 [[ -r "$HOME_DIR/source-scripts/work.sh" ]] && source $HOME_DIR/source-scripts/work.sh
@@ -202,7 +202,9 @@ autoload -Uz compinit && compinit -u -d $XDG_CACHE_HOME/zsh/.zcompdump
 
 # Track last CWD so new kitty windows can resume there
 autoload -Uz add-zsh-hook
-_aula_save_last_cwd() { print -r -- "$PWD" >| "$XDG_CACHE_HOME/last_cwd" }
-add-zsh-hook chpwd _aula_save_last_cwd
-[ -f "$XDG_CACHE_HOME/last_cwd" ] || _aula_save_last_cwd
+_save_last_cwd() { print -r -- "$PWD" >| "$XDG_CACHE_HOME/last_cwd" }
+add-zsh-hook chpwd _save_last_cwd
+[ -f "$XDG_CACHE_HOME/last_cwd" ] || _save_last_cwd
 
+
+alias abc="agent-browser close --all"
