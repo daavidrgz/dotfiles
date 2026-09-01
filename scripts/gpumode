@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+MUX=/sys/devices/platform/asus-nb-wmi/gpu_mux_mode
+
+die() { echo "gpumode: $*" >&2; exit 1; }
+
+usage() {
+	cat <<'EOF'
+Usage: gpumode <mode>
+       gpumode status
+
+Modes:
+  integrated   dGPU removed from the PCI bus. Best battery. No HDMI out
+               (the port is wired to the dGPU).
+  hybrid       dGPU present and available for render offload.
+  dgpu         Panel MUX'd straight to the dGPU. Best performance.
+               Reboots, because the hardware MUX only flips on a POST.
+
+integrated and hybrid restart the display manager instead of rebooting,
+which ends your graphical session but not your uptime.
+EOF
+}
+
+status() {
+	local on_bus modules holders cfg mux pwr state
+
+	on_bus=$(lspci 2>/dev/null | grep -ci nvidia || true)
+	modules=$(lsmod | grep -c '^nvidia' || true)
+	cfg=$(grep -o '"mode"[^,]*' /etc/supergfxd.conf 2>/dev/null |
+		grep -o '[A-Za-z]*"$' | tr -d '"' || echo '?')
+	mux=$(cat "$MUX" 2>/dev/null || echo '?')
+
+	holders=0
+	for p in /proc/[0-9]*; do
+		ls -l "$p/fd" 2>/dev/null | grep -q nvidia && holders=$((holders + 1))
+	done
+
+	state=$(cat /sys/class/power_supply/BAT0/status 2>/dev/null || echo '?')
+	pwr=$(awk '{printf "%.1f", $1/1000000}' \
+		/sys/class/power_supply/BAT0/power_now 2>/dev/null || echo '?')
+
+	echo "configured mode : $cfg"
+	echo "gpu_mux_mode    : $mux  (1=Optimus/panel on iGPU, 0=panel MUX'd to dGPU)"
+	echo "dGPU on PCI bus : $on_bus device(s)"
+	echo "nvidia modules  : $modules"
+	echo "nvidia holders  : $holders process(es)"
+	echo "battery         : ${pwr}W ($state)"
+
+	case "$state" in
+		Charging|Full)
+			echo
+			echo "note: on AC the wattage is charging current, not system draw."
+			;;
+	esac
+}
+
+[ $# -eq 1 ] || { usage; exit 1; }
+
+case "$1" in
+	status)         status; exit 0 ;;
+	-h|--help|help) usage;  exit 0 ;;
+	integrated)     TARGET=Integrated  ;;
+	hybrid)         TARGET=Hybrid      ;;
+	dgpu)           TARGET=AsusMuxDgpu ;;
+	*)              usage; die "unknown mode '$1'" ;;
+esac
+
+[ "$(systemctl is-active supergfxd)" = active ] \
+	|| die "supergfxd is $(systemctl is-active supergfxd), not active. Reboot first."
+
+[ "$(id -u)" -eq 0 ] || exec sudo -- "$0" "$@"
+
+command -v supergfxctl >/dev/null || die "supergfxctl not found"
+
+echo "Switching to $TARGET. Your graphical session will end."
+
+systemd-run --collect --service-type=oneshot --unit="gpumode-$$" \
+	/bin/bash -c "
+		systemctl stop display-manager
+		timeout 60 supergfxctl -m $TARGET
+		rc=\$?
+		systemctl start display-manager
+		if [ \"$TARGET\" = AsusMuxDgpu ] && [ \$rc -eq 0 ]; then
+			systemctl reboot
+		fi
+		exit \$rc
+	"

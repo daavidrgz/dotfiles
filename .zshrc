@@ -51,6 +51,10 @@ export CAELESTIA_RECORDINGS_DIR="$HOME/videos/recordings"
 HISTFILE=~/.zsh_history
 HISTSIZE=50000
 SAVEHIST=50000
+# Timestamp each entry, so a torn write corrupts one line instead of the whole file
+setopt EXTENDED_HISTORY
+# Write commands as they run, not at shell exit: a crash loses one command, not a session
+setopt INC_APPEND_HISTORY
 bindkey -e
 
 # ZSH antidote to load plugins
