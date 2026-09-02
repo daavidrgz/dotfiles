@@ -486,6 +486,16 @@ for u in "$PWD"/.config/systemd/user/*; do
 done
 systemctl --user daemon-reload
 
+# EasyEffects (speaker/mic DSP) — presets, autoload rules and impulse
+# responses. Symlink the whole directory: EasyEffects is its only user and
+# presets saved from the GUI then land straight in the repo. The unit file
+# (.config/systemd/user/easyeffects.service) was linked in the loop above.
+# NOTE: never drop files in ~/.config/easyeffects/{output,input,irs} —
+# EasyEffects 8 migrates that legacy location into ~/.local/share and
+# trashes the originals.
+mkdir -p ~/.local/share
+ln -snf "$PWD"/.local/share/easyeffects ~/.local/share/easyeffects
+
 # Discord per-user override (Wayland Ozone flags — fixes the renderer
 # artifacts under Hyprland). Copy, not symlink: this directory is shared
 # with desktop entries that other tools (waydroid, gh, etc.) drop in at
@@ -587,8 +597,15 @@ User-level (from `services/services-user.txt`):
 
 ```bash
 systemctl --user enable pipewire.socket pipewire-pulse.socket wireplumber.service \
-                        xdg-user-dirs.service archy.service
+                        xdg-user-dirs.service archy.service easyeffects.service
 ```
+
+> **Audio DSP (EasyEffects).** The Zenbook's speakers sound thin on stock Linux (Windows ships a Dolby Atmos DSP that Linux does not get). `easyeffects.service` runs EasyEffects in `--service-mode` (no window) bound to `graphical-session.target`, so it works under any compositor. Presets live in `.local/share/easyeffects/` (symlinked in §12.A):
+>
+> - **Output → `Laptop`** (Digitalone1's LoudnessEqualizer: gate, compressor, multiband compressor, EQ, limiter) autoloads for the internal speaker via `autoload/output/`. JackHack96's presets (`Dolby Atmos`, `Bass Enhancing + Perfect EQ`, `Perfect EQ`, `Speaker Sync`, …) are installed as alternatives.
+> - **Input → `Mic Clean`** (RNNoise) autoloads for the internal digital mic via `autoload/input/`.
+>
+> Useful commands: `easyeffects -p` (list presets), `easyeffects -l "<name>"` (switch), `easyeffects -b 1` / `-b 2` (bypass on/off for A/B), `easyeffects -s` (what is loaded). Open the GUI with plain `easyeffects` — it attaches to the running service. Verify it is in the chain with `wpctl status`: app streams must go to **Easy Effects Sink**, not straight to the speaker.
 
 ### NVIDIA hybrid (Intel + NVIDIA) notes
 

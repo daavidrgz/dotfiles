@@ -1,0 +1,16 @@
+[Unit]
+Description=EasyEffects audio processing (background service)
+Documentation=https://github.com/wwmm/easyeffects
+PartOf=graphical-session.target
+After=graphical-session.target pipewire.service wireplumber.service
+Requires=pipewire.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/easyeffects --service-mode
+Restart=on-failure
+RestartSec=3
+Slice=session.slice
+
+[Install]
+WantedBy=graphical-session.target
