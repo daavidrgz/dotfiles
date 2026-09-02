@@ -548,6 +548,7 @@ sudo install -m644 etc/supergfxd.conf                       /etc/supergfxd.conf
 sudo install -m644 etc/asusd/asusd.ron                      /etc/asusd/asusd.ron
 sudo install -m644 etc/sddm.conf.d/sddm.conf                /etc/sddm.conf.d/sddm.conf
 sudo install -m644 etc/mkinitcpio.conf                      /etc/mkinitcpio.conf
+sudo install -m644 etc/security/faillock.conf             /etc/security/faillock.conf   # pam_faillock: 10 tries, 60 s lockout (Arch default is 3 / 10 min)
 sudo mkinitcpio -P    # rebuild with the dotfiles version
 ```
 
